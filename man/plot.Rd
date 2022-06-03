@@ -34,10 +34,12 @@ points observed in the data subset.
 # estimate a model using the houses dataset
 fit <- diseq_deterministic_adjustment(
   HS | RM | ID | TREND ~
-  RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-  RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
-  fair_houses(),  correlated_shocks = FALSE,
-  estimation_options = list(control = list(maxit = 1e+6)))
+    RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+      RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses(),
+  correlated_shocks = FALSE,
+  estimation_options = list(control = list(maxit = 1e+6))
+)
 
 # show model's illustration plot
 plot(fit)
