@@ -5,8 +5,9 @@
 #' @include diseq_stochastic_adjustment.R
 
 
-#' @title Market Model Fit
+#' @title Market model fit
 #'
+#' @slot model The underlying market model object.
 #' @slot fit A list holding estimation outputs.
 #' @examples
 #' # estimate an equilibrium  model using the houses dataset
@@ -41,20 +42,22 @@ NULL
 #' class. Thus, all the public functionality of the underlying market model is also
 #' directly accessible from the output class.
 #'
-#' Furthermore, the class is responsible for harmonizing the heterogeneous outputs
-#' resulting from different estimation methods of market models. For example, a
-#' \code{2SLS} estimation of the \code{\linkS4class{equilibrium_model}} gives a
-#' \code{\link[systemfit]{systemfit}} object, while the maximum likelihood estimation
-#' of \code{\linkS4class{diseq_basic}} returns an \code{\link[bbmle]{mle2}} object. In
-#' both cases, the \code{market_fit} stores the estimation output in the member
-#' \code{fit} of type \code{list}. Methods of the class examine the type of the
-#' \code{fit} and direct execution accordingly to different branches to produce
+#' Furthermore, the class is responsible for harmonizing the heterogeneous
+#' outputs resulting from different estimation methods of market models. For
+#' example, a \code{2SLS} estimation of the
+#' \code{\linkS4class{equilibrium_model}} returns a list of linear regression
+#' models (the first stage, demand, and supply models), while the maximum
+#' likelihood estimation of \code{\linkS4class{diseq_basic}} returns an
+#' \code{\link[stats]{optim}} list. In both cases, the \code{market_fit}
+#' stores the estimation output in the member \code{fit} of type \code{list}.
+#' Methods of the class examine the type of the \code{fit} and direct
+#' execution accordingly to different branches to produce
 #' a unified experience for the caller.
 #' @export
 setClass(
   "market_fit",
-  contains = "market_model",
   representation(
+    model = "market_model",
     fit = "list"
   ),
   prototype()
@@ -63,16 +66,110 @@ setClass(
 setMethod(
   "initialize", "market_fit",
   function(.Object, market_model, estimate) {
-    for (slot_name in slotNames(market_model)) {
-      slot(.Object, slot_name) <- slot(market_model, slot_name)
-    }
-    .Object@fit <- list(estimate)
+    .Object@model <- market_model
+    .Object@fit <- estimate
 
     .Object
   }
 )
 
-#' @describeIn summaries Summarizes the model's fit.
+market_fit_coefficients <- function(object, summary = FALSE) {
+  if (object@fit$method != "2SLS") {
+    coefs <- object@fit$par
+  } else {
+    price_variable <- colnames(object@model@system@price_vector)
+    adjust_names <- function(prefix, side) {
+      paste(
+        prefix, gsub(
+          sprintf("\\b%s_FITTED\\b", price_variable), price_variable,
+          names(side)
+        ),
+        sep = ""
+      )
+    }
+
+    demand <- object@fit$demand_model$coefficients
+    demand <- c(demand[2], demand[1], demand[-c(1, 2)])
+    names(demand) <- adjust_names("D_", demand)
+
+    supply <- object@fit$supply_model$coefficients
+    supply <- c(supply[2], supply[1], supply[-c(1, 2)])
+    names(supply) <- adjust_names("S_", supply)
+
+    var_d <- var(object@fit$demand_model$residuals)
+    names(var_d) <- prefixed_variance_variable(object@model@system@demand)
+
+    var_s <- var(object@fit$supply_model$residuals)
+    names(var_s) <- prefixed_variance_variable(object@model@system@supply)
+
+    coefs <- c(demand, supply, var_d, var_s)
+    if (object@model@system@correlated_shocks) {
+      rho <- cor(
+        object@fit$demand_model$residuals,
+        object@fit$supply_model$residuals
+      )
+      names(rho) <- correlation_variable(object@model@system)
+      coefs <- c(coefs, rho)
+    }
+    names(coefs) <- gsub("\\(Intercept\\)", "CONST", names(coefs))
+  }
+
+  if (summary) {
+    sds <- sqrt(diag(object@fit$vcov))
+    zvals <- coefs / sds
+    pvals <- 2 * pnorm(-abs(zvals))
+    coefs <- cbind(
+      Estimate = coefs, `Std. Error` = sds,
+      `z value` = zvals, `Pr(z)` = pvals
+    )
+  }
+
+  coefs
+}
+
+common_market_fit_show <- function(object, summary = FALSE) {
+  if (object@fit$method == "2SLS") {
+    cat("\nLeast square estimation:", sep = "", fill = TRUE)
+  } else {
+    cat("\nMaximum likelihood estimation:", sep = "", fill = TRUE)
+  }
+  cat(
+    labels = sprintf("  %-20s:", "Method"), object@fit$method,
+    sep = "", fill = TRUE
+  )
+  if (object@fit$method != "2SLS") {
+    args <- object@fit$call[[2]]
+    if (summary) {
+      if (!is.null(args$control$maxit)) {
+        cat(
+          labels = sprintf("  %-20s:", "Max Iterations"), args$control$maxit,
+          sep = "", fill = TRUE
+        )
+      }
+      if (!is.null(args$control$reltol)) {
+        cat(
+          labels = sprintf("  %-20s:", "Relative Tolerance"),
+          args$control$reltol,
+          sep = "", fill = TRUE
+        )
+      }
+    }
+    cat(
+      labels = sprintf("  %-20s:", "Convergence Status"),
+      ifelse(!object@fit$convergence, "success", "failure"),
+      sep = "", fill = TRUE
+    )
+  }
+}
+
+#' @rdname show
+#' @export
+setMethod("show", signature(object = "market_fit"), function(object) {
+  show(object@model)
+  common_market_fit_show(object)
+})
+
+#' @describeIn summary Summarizes the model's fit.
 #' @description \code{market_fit}: Prints basic information about the
 #' passed model fit. In addition to the output of
 #' the model's \code{summary} method, the function prints basic
@@ -86,38 +183,39 @@ setMethod(
 #' \item the estimated coefficients, their standard errors, Z values, and P values, and
 #' \item \eqn{-2 \log L} evaluated at the maximum.
 #' }
-#' For a linear estimation of the equilibrium system, the function prints the
-#' estimation summary provided by \code{\link[systemfit]{systemfit}} in
-#' addition to the model's \code{summary} output.
+#' For a linear estimation of the equilibrium system, the function prints
+#' \itemize{
+#' \item the used method,
+#' \item the summary of the first stage regression,
+#' \item the summary of the demand (second stage) regression, and
+#' \item the summary of the supply (second stage) regression.
+#' }
 #' @return No return value, called for for side effects (print summary).
 #' @export
 setMethod("summary", signature(object = "market_fit"), function(object) {
-  (selectMethod("summary", "market_model"))(object)
-  if (is(object@fit[[1]], "mle2")) {
-    summary <- (selectMethod("summary", "mle2"))(object@fit[[1]])
-    args <- summary@call[[2]]
+  summary(object@model)
+  if (object@fit$method != "2SLS") {
+    args <- object@fit$call[[2]]
 
-    cat("\nMaximum likelihood estimation\n")
-    cat(sprintf("  %-20s: %s\n", "Method", object@fit[[1]]@method))
-    cat(sprintf(
-      "  %-20s: %d\n", "Max Iterations",
-      args$control$maxit
-    ))
-    cat(sprintf(
-      "  %-20s: %g\n", "Relative Tolerance",
-      args$control$reltol
-    ))
-    cat(sprintf(
-      "  %-20s: %s\n", "Convergence Status",
-      ifelse(!object@fit[[1]]@details$convergence, "success", "failure")
-    ))
-    cat(sprintf("  %-20s:\n", "Starting Values"))
-    print(args$start, digits = 4)
-    cat("\nCoefficients\n")
-    print(summary@coef, digits = 4)
-    cat(sprintf("\n%s: %g\n", "-2 log L", summary@m2logL))
+    common_market_fit_show(object, summary = TRUE)
+    cat(sprintf("  %-20s:", "Starting Values"), sep = "", fill = TRUE)
+    print(object@fit$start, digits = 4)
+
+    cat("\nCoefficients:", sep = "", fill = TRUE)
+    print(market_fit_coefficients(object, summary = TRUE), digits = 4)
+    cat(
+      labels = sprintf("\n%s:", "-2 log L"),
+      -2 * logLik(object),
+      sep = "", fill = TRUE
+    )
   } else {
-    print(summary(object@fit[[1]]$system_model))
+    common_market_fit_show(object, summary = TRUE)
+    cat("\nFirst Stage:", sep = "", fill = TRUE)
+    print(summary(object@fit$first_stage_model))
+    cat("\nDemand Equation:", sep = "", fill = TRUE)
+    print(summary(object@fit$demand_model))
+    cat("\nSupply Equation:", sep = "", fill = TRUE)
+    print(summary(object@fit$supply_model))
   }
 })
 
@@ -127,17 +225,18 @@ setMethod("summary", signature(object = "market_fit"), function(object) {
 #' All models are estimated using full information maximum likelihood. The
 #' \code{\linkS4class{equilibrium_model}} can also be estimated using two-stage
 #' least squares. The maximum likelihood estimation is based on
-#' \code{\link[bbmle]{mle2}}. If no starting values are provided, the function uses
+#' \code{\link[stats]{optim}}. If no starting values are provided, the function uses
 #' linear regression estimates as initializing values. The default optimization method is
-#' BFGS. For other alternatives see \code{\link[bbmle]{mle2}}. The implementation of
+#' BFGS. For other alternatives see \code{\link[stats]{optim}}. The implementation of
 #' the two-stage least square estimation of the \code{\linkS4class{equilibrium_model}}
-#' is based on \code{\link[systemfit]{systemfit}}.
+#' is based on \code{\link[stats]{lm}}.
 #' @param object A model object.
-#' @param ... Named parameter used in the model's estimation. These are passed further
-#' down to the estimation call. For the \code{\linkS4class{equilibrium_model}} model, the
-#' parameters are passed to \code{\link[systemfit]{systemfit}}, if the method is set to
-#' \code{2SLS}, or to \code{\link[bbmle]{mle2}} for any other method. For the rest of
-#' the models, the parameters are passed to \code{\link[bbmle]{mle2}}.
+#' @param ... Additional parameter used in the model's estimation. These are
+#' passed further down to the estimation call. For the
+#' \code{\linkS4class{equilibrium_model}} model, the parameters are passed to
+#' \code{\link[stats]{lm}}, if the method is set to
+#' \code{2SLS}, or to \code{\link[stats]{optim}} for any other method. For the rest of
+#' the models, the parameters are passed to \code{\link[stats]{optim}}.
 #' @return The object that holds the estimation result.
 #' @rdname estimate
 #' @examples
@@ -194,46 +293,53 @@ setMethod(
     va_args <- list(...)
 
     if (hessian == "skip" ||
-      ((object@model_type_string %in% c("Basic", "Directional")) &&
+      ((object@model_name %in% c("Basic", "Directional")) &&
         hessian == "calculated")) {
-      va_args$skip.hessian <- TRUE
+      va_args$hessian <- FALSE
     } else {
+      va_args$hessian <- TRUE
       hessian <- "numerical"
     }
 
-    va_args$start <- prepare_initializing_values(object, va_args$start)
+    va_args$par <- start <- prepare_initializing_values(object, va_args$start)
+    va_args$start <- NULL
 
     if (is.null(va_args$method)) {
       va_args$method <- "BFGS"
     }
 
-    va_args$minuslogl <- function(...) minus_log_likelihood(object, ...)
-    bbmle::parnames(va_args$minuslogl) <- likelihood_variables(object@system)
+    va_args$fn <- function(...) -log_likelihood(object, ...)
     if (gradient == "calculated") {
-      va_args$gr <- function(...) gradient(object, ...)
-      bbmle::parnames(va_args$gr) <- likelihood_variables(object@system)
+      va_args$gr <- function(...) -gradient(object, ...)
     }
 
-    fit <- do.call(bbmle::mle2, va_args)
-    fit@call.orig <- call("bbmle::mle2", va_args)
+    fit <- do.call(optim, va_args)
+    fit$call <- call("optim", va_args)
+    fit$start <- start
+    fit$method <- va_args$method
+    fit$value <- -fit$value
 
-    if (hessian == "calculated") {
-      print_verbose(object@logger, "Calculating hessian and variance-covariance matrix.")
-      fit@details$hessian <- hessian(object, fit@coef)
-      tryCatch(
-        fit@vcov <- MASS::ginv(fit@details$hessian),
-        error = function(e) print_warning(object@logger, e$message)
-      )
-    }
+    if (hessian != "skip") {
+      if (hessian == "calculated") {
+        print_verbose(
+          object@logger,
+          "Calculating hessian and variance-covariance matrix."
+        )
+        fit$hessian <- hessian(object, fit$par)
+      } else {
+        fit$hessian <- -fit$hessian
+      }
 
-    if (length(standard_errors) == 1) {
       if (standard_errors == "heteroscedastic") {
         fit <- set_heteroscedasticity_consistent_errors(object, fit)
-      } else if (standard_errors != "homoscedastic") {
+      } else if (standard_errors == "homoscedastic") {
+        tryCatch(
+          fit$vcov <- -MASS::ginv(fit$hessian),
+          error = function(e) print_warning(object@logger, e$message)
+        )
+      } else {
         fit <- set_clustered_errors(object, fit, standard_errors)
       }
-    } else {
-      fit <- set_clustered_errors(object, fit, standard_errors)
     }
 
     new("market_fit", object, fit)
@@ -244,16 +350,18 @@ setMethod(
 #' @param method A string specifying the estimation method. When the passed value is
 #' among \code{Nelder-Mead}, \code{BFGS}, \code{CG}, \code{L-BFGS-B}, \code{SANN},
 #' and \code{Brent}, the model is estimated using
-#' full information maximum likelihood based on \code{\link[bbmle]{mle2}} functionality.
+#' full information maximum likelihood based on \code{\link[stats]{optim}} functionality.
 #' When \code{2SLS} is supplied, the model is estimated using two-stage least squares
-#' based on \code{\link[systemfit]{systemfit}}. In this case, the function returns a
+#' using \code{\link[stats]{lm}}. In this case, the function returns a
 #' list containing the first and second stage estimates. The default value is
 #' \code{BFGS}.
 setMethod(
   "estimate", signature(object = "equilibrium_model"),
   function(object, method = "BFGS", ...) {
     if (method != "2SLS") {
-      return(callNextMethod(object, method = method, ...))
+      return((selectMethod("estimate", "market_model"))(
+        object, method = method, ...
+      ))
     }
 
     quantity_variable <- colnames(object@system@quantity_vector)
@@ -271,35 +379,63 @@ setMethod(
       price_variable, " ~ ", paste0(first_stage_controls, collapse = " + ")
     )
 
-    first_stage_model <- lm(first_stage_formula, object@model_tibble)
-    object@model_tibble[, fitted_column] <- first_stage_model$fitted.values
+    first_stage_model <- lm(first_stage_formula, object@data)
+    object@data[, fitted_column] <- first_stage_model$fitted.values
 
-    ## create demand formula
-    independent <- all.vars(terms(object@system@formula, lhs = 0, rhs = 1))
+    ## estimate demand model
+    independent <- gsub(
+      sprintf("\\b%s\\b", price_variable), fitted_column,
+      all.vars(terms(object@system@formula, lhs = 0, rhs = 1))
+    )
     demand_formula <- formula(paste0(
       quantity_variable, " ~ ", paste0(independent, collapse = " + ")
     ))
+    demand_model <- lm(demand_formula, object@data)
 
-    ## create supply formula
-    independent <- all.vars(terms(object@system@formula, lhs = 0, rhs = 2))
-    independent <- independent[independent != "CONST"]
+    ## estimate supply model
+    independent <- gsub(
+      sprintf("\\b%s\\b", price_variable), fitted_column,
+      all.vars(terms(object@system@formula, lhs = 0, rhs = 2))
+    )
     supply_formula <- formula(paste0(
       quantity_variable, " ~ ", paste0(independent, collapse = " + ")
     ))
+    supply_model <- lm(supply_formula, object@data)
 
     inst <- formula(paste0(" ~ ", paste0(first_stage_controls, collapse = " + ")))
-    system_model <- systemfit::systemfit(
-      list(demand = demand_formula, supply = supply_formula),
-      method = "2SLS", inst = inst, data = object@model_tibble
+
+    ## coefficient covariance matrix (following Henningsen A, Hamann JD (2007))
+    coefs <- c(demand_model$coefficients, supply_model$coefficients)
+    mp <- model.matrix(first_stage_model)
+    md <- model.matrix(demand_model)
+    ms <- model.matrix(supply_model)
+    nobsd <- nrow(md)
+    ncoefd <- ncol(md)
+    nobss <- nrow(ms)
+    ncoefs <- ncol(ms)
+    nobsall <- nobsd + nobss
+    ncoefall <- ncoefd + ncoefs
+    var <- (
+      sum(demand_model$residuals**2) + sum(demand_model$residuals**2)
+    ) / (nobsall - ncoefall)
+
+    zz <- crossprod(mp)
+    xx <- rbind(
+      mp %*% solve(zz, crossprod(mp, cbind(md, matrix(0, nobss, ncoefs)))),
+      mp %*% solve(zz, crossprod(mp, cbind(matrix(0, nobsd, ncoefd), ms)))
     )
+    vc <- var * solve(crossprod(xx))
 
     new(
       "market_fit", object,
-      list(first_stage_model = first_stage_model, system_model = system_model)
+      list(
+        method = method, first_stage_model = first_stage_model,
+        demand_model = demand_model, supply_model = supply_model,
+        vcov = vc
+      )
     )
   }
 )
-
 
 #' Estimated coefficients of a fitted market model.
 #'
@@ -321,43 +457,19 @@ setMethod(
 #'
 #' # access the estimated coefficients
 #' coef(fit)
+#' coefficients(fit)
 #' }
 #' @export
 setMethod(
   "coef", signature(object = "market_fit"),
-  function(object) {
-    if (is(object@fit[[1]], "mle2")) {
-      object@fit[[1]]@coef
-    } else {
-      demand <- object@fit[[1]]$system_model$coefficients[
-        grep("demand_", names(object@fit[[1]]$system_model$coefficients))
-      ]
-      demand <- c(demand[2], demand[1], demand[-c(1, 2)])
-      names(demand) <- gsub("demand_", "D_", names(demand))
+  function(object) market_fit_coefficients(object)
+)
 
-      supply <- object@fit[[1]]$system_model$coefficients[
-        grep("supply_", names(object@fit[[1]]$system_model$coefficients))
-      ]
-      supply <- c(supply[2], supply[1], supply[-c(1, 2)])
-      names(supply) <- gsub("supply_", "S_", names(supply))
-
-      var_d <- object@fit[[1]]$system_model$residCov[[1, 1]]
-      names(var_d) <- prefixed_variance_variable(object@system@demand)
-
-      var_s <- object@fit[[1]]$system_model$residCov[[2, 2]]
-      names(var_s) <- prefixed_variance_variable(object@system@supply)
-
-      coefs <- c(demand, supply, var_d, var_s)
-      if (object@system@correlated_shocks) {
-        rho <- object@fit[[1]]$system_model$residCov[1, 2] / sqrt(var_d * var_s)
-        names(rho) <- correlation_variable(object@system)
-        coefs <- c(coefs, rho)
-      }
-      names(coefs) <- gsub("\\(Intercept\\)", "CONST", names(coefs))
-
-      coefs
-    }
-  }
+#' @describeIn coef Estimated coefficients alias.
+#' @export
+setMethod(
+  "coefficients", signature(object = "market_fit"),
+  function(object) market_fit_coefficients(object)
 )
 
 #' Variance-covariance matrix for a fitted market model.
@@ -387,13 +499,9 @@ setMethod(
 setMethod(
   "vcov", signature(object = "market_fit"),
   function(object) {
-    if (is(object@fit[[1]], "mle2")) {
-      colnames(object@fit[[1]]@vcov) <- names(coef(object))
-      rownames(object@fit[[1]]@vcov) <- names(coef(object))
-      object@fit[[1]]@vcov
-    } else {
-      object@fit[[1]]$system_model$coefCov
-    }
+    colnames(object@fit$vcov) <- names(coef(object))
+    rownames(object@fit$vcov) <- names(coef(object))
+    object@fit$vcov
   }
 )
 
@@ -402,9 +510,10 @@ setMethod(
 #'
 #' Specializes the \code{\link[stats]{logLik}} function for the market models
 #' of the package estimated with full information minimum likelihood. It
-#' returns \code{NULL} for the equilibrium model estimated with
-#' \code{\link[systemfit]{systemfit}}.
+#' returns \code{NULL} for the equilibrium model estimated with two stage
+#' least squares (\code{2SLS}).
 #' @param object A fitted model object.
+#' @param ... Additional arguments. Unused.
 #' @return A \code{\link[stats]{logLik}} object.
 #' @rdname logLik
 #' @examples
@@ -422,36 +531,46 @@ setMethod(
 #' # get the log likelihood object
 #' logLik(fit)
 #' }
+#' @method logLik market_fit
 #' @export
-setMethod(
-  "logLik", signature(object = "market_fit"),
-  function(object) {
-    ll <- NULL
-    if (is(object@fit[[1]], "mle2")) {
-      ll <- structure(-object@fit[[1]]@min,
-        df = length(object@fit[[1]]@coef), class = "logLik"
-      )
-    }
-    ll
+logLik.market_fit <- function(object, ...) {
+  ll <- NULL
+  if (object@fit$method != "2SLS") {
+    ll <- structure(object@fit$value,
+      df = length(coef(object)), class = "logLik"
+    )
   }
+  ll
+}
+
+#' @rdname model_description
+setMethod(
+  "name", signature(object = "market_fit"),
+  function(object) name(object@model)
 )
 
-try_coerce_market_fit <- function(object) {
-  to_class <- class(object)[[1]]
-  if (object@model_type_string == "Equilibrium") {
-    to_class <- "equilibrium_model"
-  } else if (object@model_type_string == "Basic") {
-    to_class <- "diseq_basic"
-  } else if (object@model_type_string == "Directional") {
-    to_class <- "diseq_directional"
-  } else if (object@model_type_string == "Deterministic Adjustment") {
-    to_class <- "diseq_deterministic_adjustment"
-  } else if (object@model_type_string == "Stochastic Adjustment") {
-    to_class <- "diseq_stochastic_adjustment"
-  }
-  class(object)[[1]] <- to_class
-  object
-}
+#' @rdname model_description
+setMethod(
+  "describe", signature(object = "market_fit"),
+  function(object) describe(object@model)
+)
+
+#' @rdname model_description
+setMethod(
+  "market_type", signature(object = "market_fit"),
+  function(object) market_type(object@model)
+)
+
+#' @rdname nobs
+#' @export
+setMethod(
+  "nobs", signature(object = "market_fit"),
+  function(object) nobs(object@model)
+)
+
+#' @rdname logLik
+#' @export
+setMethod("logLik", signature(object = "market_fit"), logLik.market_fit)
 
 #' @rdname shortage_analysis
 setMethod(
@@ -459,9 +578,7 @@ setMethod(
     model = "missing", parameters = "missing",
     fit = "market_fit"
   ),
-  function(fit) {
-    shortages(model = try_coerce_market_fit(fit), parameters = coef(fit))
-  }
+  function(fit) shortages(model = fit@model, parameters = coef(fit))
 )
 
 #' @rdname shortage_analysis
@@ -470,12 +587,7 @@ setMethod(
     model = "missing", parameters = "missing",
     fit = "market_fit"
   ),
-  function(fit) {
-    normalized_shortages(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
-  }
+  function(fit) normalized_shortages(model = fit@model, parameters = coef(fit))
 )
 
 #' @rdname shortage_analysis
@@ -484,12 +596,7 @@ setMethod(
     model = "missing", parameters = "missing",
     fit = "market_fit"
   ),
-  function(fit) {
-    relative_shortages(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
-  }
+  function(fit) relative_shortages(model = fit@model, parameters = coef(fit))
 )
 
 #' @rdname shortage_analysis
@@ -498,12 +605,7 @@ setMethod(
     model = "missing", parameters = "missing",
     fit = "market_fit"
   ),
-  function(fit) {
-    shortage_probabilities(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
-  }
+  function(fit) shortage_probabilities(model = fit@model, parameters = coef(fit))
 )
 
 #' @rdname shortage_analysis
@@ -512,12 +614,7 @@ setMethod(
     model = "missing", parameters = "missing",
     fit = "market_fit"
   ),
-  function(fit) {
-    shortage_indicators(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
-  }
+  function(fit) shortage_indicators(model = fit@model, parameters = coef(fit))
 )
 
 #' @rdname shortage_analysis
@@ -526,12 +623,7 @@ setMethod(
     model = "missing", parameters = "missing",
     fit = "market_fit"
   ),
-  function(fit) {
-    shortage_standard_deviation(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
-  }
+  function(fit) shortage_standard_deviation(model = fit@model, parameters = coef(fit))
 )
 
 #' @rdname marginal_effects
@@ -542,8 +634,7 @@ setMethod(
   ),
   function(fit, variable) {
     shortage_marginal(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit), variable = variable
+      model = fit@model, parameters = coef(fit), variable = variable
     )
   }
 )
@@ -556,18 +647,18 @@ setMethod(
   ),
   function(fit, variable, aggregate) {
     shortage_probability_marginal(
-      model = try_coerce_market_fit(fit),
+      model = fit@model,
       parameters = coef(fit), variable = variable,
       aggregate = aggregate
     )
   }
 )
 
-#' @rdname scores
+#' @rdname model_likelihoods
 setMethod(
   "scores",
   signature(object = "missing", parameters = "missing", fit = "market_fit"),
-  function(fit) scores(try_coerce_market_fit(fit), coef(fit))
+  function(fit) scores(fit@model, coef(fit))
 )
 
 #' @rdname market_aggregation
@@ -575,10 +666,7 @@ setMethod(
   "aggregate_demand",
   signature(model = "missing", parameters = "missing", fit = "market_fit"),
   function(fit) {
-    aggregate_demand(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
+    aggregate_demand(model = fit@model, parameters = coef(fit))
   }
 )
 
@@ -587,10 +675,7 @@ setMethod(
   "aggregate_supply",
   signature(model = "missing", parameters = "missing", fit = "market_fit"),
   function(fit) {
-    aggregate_supply(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
+    aggregate_supply(model = fit@model, parameters = coef(fit))
   }
 )
 
@@ -599,10 +684,7 @@ setMethod(
   "demanded_quantities",
   signature(model = "missing", parameters = "missing", fit = "market_fit"),
   function(fit) {
-    demanded_quantities(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
+    demanded_quantities(model = fit@model, parameters = coef(fit))
   }
 )
 
@@ -611,10 +693,7 @@ setMethod(
   "supplied_quantities",
   signature(model = "missing", parameters = "missing", fit = "market_fit"),
   function(fit) {
-    supplied_quantities(
-      model = try_coerce_market_fit(fit),
-      parameters = coef(fit)
-    )
+    supplied_quantities(model = fit@model, parameters = coef(fit))
   }
 )
 
@@ -654,40 +733,40 @@ setMethod(
 #' @export
 setMethod("plot", signature(x = "market_fit"), function(x, subject, time, ...) {
   if (missing(subject)) {
-    subject <- x@model_tibble %>%
-      dplyr::distinct(!!as.symbol(x@subject_column)) %>%
+    subject <- x@model@data |>
+      dplyr::distinct(!!as.symbol(x@model@subject_column)) |>
       dplyr::pull()
   }
   if (missing(time)) {
-    time <- x@model_tibble %>%
-      dplyr::distinct(!!as.symbol(x@time_column)) %>%
+    time <- x@model@data |>
+      dplyr::distinct(!!as.symbol(x@model@time_column)) |>
       dplyr::pull()
   }
   va_args <- list(...)
   if (is.null(va_args$xlab)) {
-    xlab <- colnames(x@system@price_vector)[1]
+    xlab <- colnames(x@model@system@price_vector)[1]
   }
   if (is.null(va_args$ylab)) {
-    ylab <- quantity_variable(x@system@demand)
+    ylab <- quantity_variable(x@model@system@demand)
   }
   if (is.null(va_args$main)) {
-    main <- x@model_type_string
+    main <- x@model@model_name
   }
-  x@system <- set_parameters(x@system, coef(x))
-  indices <- x@model_tibble %>%
-    dplyr::mutate(row = row_number()) %>%
-    dplyr::filter(!!as.symbol(x@subject_column) %in% subject &
-      !!as.symbol(x@time_column) %in% time) %>%
+  x@model@system <- set_parameters(x@model@system, coef(x))
+  indices <- x@model@data |>
+    dplyr::mutate(row = row_number()) |>
+    dplyr::filter(!!as.symbol(x@model@subject_column) %in% subject &
+      !!as.symbol(x@model@time_column) %in% time) |>
     dplyr::pull(row)
-  a <- x@system@demand@control_matrix[indices, ] %*% x@system@demand@beta
-  d <- function(p) mean(c(a) + x@system@demand@alpha * p)
-  c <- x@system@supply@control_matrix[indices, ] %*% x@system@supply@beta
-  s <- function(p) mean(c(c) + x@system@supply@alpha * p)
-  prices <- x@system@price_vector[indices]
+  a <- x@model@system@demand@control_matrix[indices, ] %*% x@model@system@demand@beta
+  d <- function(p) mean(c(a) + x@model@system@demand@alpha * p)
+  c <- x@model@system@supply@control_matrix[indices, ] %*% x@model@system@supply@beta
+  s <- function(p) mean(c(c) + x@model@system@supply@alpha * p)
+  prices <- x@model@system@price_vector[indices]
   bandwidth <- 0.01
   fprices <- min(prices) * (1 - bandwidth)
   tprices <- max(prices) * (1 + bandwidth)
-  quantities <- x@system@quantity_vector[indices]
+  quantities <- x@model@system@quantity_vector[indices]
   fquantities <- min(quantities) * (1 - bandwidth)
   tquantities <- max(quantities) * (1 + bandwidth)
   dom <- seq(from = min(fprices), to = max(tprices), length.out = 100)

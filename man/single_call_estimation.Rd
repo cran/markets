@@ -122,7 +122,7 @@ into a single call. They also provide a less verbose interface to the
 functionality of the package. The functions expect a formula following the
 specification described in \link[=market_model_formula]{formula}, a
 dataset, and optionally further initialization (see
-\link[=initialize_market_model]{model initialization}) and
+\link[=model_initialization]{model initialization}) and
 estimation (see \link[=estimate]{model estimation}) options.
 
 Each of these functions parses the passed formula, initializes the model

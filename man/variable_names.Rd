@@ -67,7 +67,7 @@ constructed by concatenating the equation prefix with \code{CONST}.
 
 \code{prefixed_independent_variables}: The names of the independent
 variables are constructed by concatenating the equation prefix with the column names
-of the data \code{tibble}.
+of the model's data frame.
 
 \code{prefixed_price_variable}: The price variable name is
 constructed by concatenating the equation prefix with the name of the price column.

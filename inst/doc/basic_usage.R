@@ -5,7 +5,6 @@ if (requireNamespace("knitr", quietly = TRUE)) {
 
 ## ----setup.libraries----------------------------------------------------------
 library(markets)
-library(magrittr)
 library(Formula)
 
 ## ----setup.data---------------------------------------------------------------
@@ -80,7 +79,7 @@ sa_fit <- diseq_stochastic_adjustment(
 )
 
 ## ----analysis.summaries-------------------------------------------------------
-summary(eq_reg@fit[[1]]$first_stage_model)
+summary(eq_reg@fit$first_stage_model)
 summary(eq_reg)
 summary(eq_fit)
 summary(bs_fit)
@@ -113,8 +112,8 @@ spmm
 
 ## ----analysis.estimates-------------------------------------------------------
 fit <- sa_fit
-mdt <- tibble::add_column(
-  fit@model_tibble,
+mdt <- cbind(
+  fit@model@data,
   shortage_indicators = c(shortage_indicators(fit)),
   normalized_shortages = c(normalized_shortages(fit)),
   shortage_probabilities = c(shortage_probabilities(fit)),
@@ -123,7 +122,7 @@ mdt <- tibble::add_column(
 
 ## ----analysis.shortages-------------------------------------------------------
 if (requireNamespace("ggplot2", quietly = TRUE)) {
-  pdt <- tibble::tibble(
+  pdt <- data.frame(
     Shortage = c(mdt$normalized_shortages, mdt$relative_shortages),
     Type = c(rep("Normalized", nrow(mdt)), rep("Relative", nrow(mdt))),
     xpos = c(rep(-1.0, nrow(mdt)), rep(1.0, nrow(mdt))),
@@ -137,7 +136,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
       linetype = Type,
       color = Type
     ), geom = "line") +
-    ggplot2::ggtitle(paste0("Estimated shortages densities (", model_name(fit), ")")) +
+    ggplot2::ggtitle(paste0("Estimated shortages densities (", name(fit), ")")) +
     ggplot2::theme(
       panel.background = ggplot2::element_rect(fill = "transparent"),
       plot.background = ggplot2::element_rect(
@@ -163,12 +162,12 @@ market <- cbind(
 summary(market)
 
 ## ----analysis.aggregation-----------------------------------------------------
-aggregates <- aggregate_demand(fit) %>%
-  dplyr::left_join(aggregate_supply(fit), by = "date") %>%
-  dplyr::mutate(date = as.numeric(date)) %>%
+aggregates <- aggregate_demand(fit) |>
+  dplyr::left_join(aggregate_supply(fit), by = "date") |>
+  dplyr::mutate(date = as.numeric(date)) |>
   dplyr::rename(demand = D_Q, supply = S_Q)
 if (requireNamespace("ggplot2", quietly = TRUE)) {
-  pdt <- tibble::tibble(
+  pdt <- data.frame(
     Date = c(aggregates$date, aggregates$date),
     Quantity = c(aggregates$demand, aggregates$supply),
     Side = c(rep("Demand", nrow(aggregates)), rep("Supply", nrow(aggregates)))
@@ -176,7 +175,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   ggplot2::ggplot(pdt, ggplot2::aes(x = Date)) +
     ggplot2::geom_line(ggplot2::aes(y = Quantity, linetype = Side, color = Side)) +
     ggplot2::ggtitle(paste0(
-      "Aggregate estimated demand and supply  (", model_name(fit), ")"
+      "Aggregate estimated demand and supply  (", name(fit), ")"
     )) +
     ggplot2::theme(
       panel.background = ggplot2::element_rect(fill = "transparent"),

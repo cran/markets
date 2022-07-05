@@ -1,14 +1,10 @@
 #' @include model_logger.R
 #' @include system_base.R
-#' @importFrom bbmle mle2 parnames summary
 #' @import dplyr
 #' @importFrom graphics legend lines
-#' @importFrom magrittr %>%
 #' @importFrom rlang :=
-#' @importFrom stats formula lm model.matrix na.omit median qnorm sd var
-#' @import tibble
+#' @importFrom stats cor formula lm logLik model.matrix model.frame na.omit median optim qnorm sd var
 
-setOldClass(c("spec_tbl_df", "tbl_df", "tbl", "data.frame"))
 utils::globalVariables("where")
 
 #' @title Market model classes
@@ -21,11 +17,12 @@ utils::globalVariables("where")
 #' @slot data_columns Vector of model's data column names. This is the union of the
 #' quantity, price and explanatory columns.
 #' @slot columns Vector of primary key and data column names for all model's equations.
-#' @slot model_tibble Model data \code{tibble}.
-#' @slot model_type_string Model type string description.
+#' @slot data Model data frame.
+#' @slot model_name Model name string.
+#' @slot market_type Market type string.
 #' @slot system Model's system of equations.
 #' @name market_models
-#' @seealso \link{initialize_market_model}
+#' @seealso \link{model_initialization}
 NULL
 
 #' @describeIn market_models Base class for market models
@@ -43,9 +40,9 @@ setClass(
     columns = "vector",
 
     ## Model data
-    model_tibble = "tbl_df",
-    model_type_string = "character",
-    market_type_string = "character",
+    data = "data.frame",
+    model_name = "character",
+    market_type = "character",
     system = "system_base"
   )
 )
@@ -113,133 +110,49 @@ setClass(
 #' @param correlated_shocks Should the model be estimated using correlated shocks?
 #' @param data The data set.
 #' @return The initialized model.
-#' @name initialize_market_model
+#' @name model_initialization
 NULL
 
 
-make_specification <- function(data, quantity, price, demand, supply,
+make_specification <- function(quantity, price, demand, supply,
                                subject, time, price_dynamics) {
   logger <- new("model_logger", 0)
 
-  found <- rep(FALSE, 6)
-  if (!missing(price_dynamics)) {
-    found <- c(found, FALSE)
-  }
+  if (is.language(quantity)) quantity <- paste0(deparse(quantity, 500), collapse = "")
+  if (is.language(price)) price <- paste0(deparse(price, 500), collapse = "")
+  if (is.language(subject)) subject <- paste0(deparse(subject, 500), collapse = "")
+  if (is.language(time)) time <- paste0(deparse(time, 500), collapse = "")
+  if (is.language(demand)) demand <- paste0(deparse(demand, 500), collapse = "")
+  if (is.language(supply)) supply <- paste0(deparse(supply, 500), collapse = "")
 
-  fm <- NULL
-  dnames <- names(data)
-
-  n <- sys.nframe()
-  while (!identical(sys.frame(which = n), globalenv())) {
-    if (!found[1]) {
-      squantity <- toString(substitute(quantity, env = sys.frame(which = n)))
-      if (squantity %in% dnames) {
-        quantity <- squantity
-        found[1] <- TRUE
-      }
-    }
-
-    if (!found[2]) {
-      sprice <- toString(substitute(price, env = sys.frame(which = n)))
-      if (sprice %in% dnames) {
-        price <- sprice
-        found[2] <- TRUE
-      }
-    }
-
-    if (!found[3]) {
-      sdemand <- all.vars(substitute(demand, env = sys.frame(which = n)))
-      if (all(sdemand %in% dnames)) {
-        demand <- paste0(sdemand, collapse = " + ")
-        found[3] <- TRUE
-      }
-    }
-
-    if (!found[4]) {
-      ssupply <- all.vars(substitute(supply, env = sys.frame(which = n)))
-      if (all(ssupply %in% dnames)) {
-        supply <- paste0(ssupply, collapse = " + ")
-        found[4] <- TRUE
-      }
-    }
-
-    if (!found[5]) {
-      ssubject <- toString(substitute(subject, env = sys.frame(which = n)))
-      if (ssubject %in% dnames) {
-        subject <- ssubject
-        found[5] <- TRUE
-      }
-    }
-
-    if (!found[6]) {
-      stime <- toString(substitute(time, env = sys.frame(which = n)))
-      if (stime %in% dnames) {
-        time <- stime
-        found[6] <- TRUE
-      }
-    }
-
-    if (length(found) == 7) {
-      if (!found[7]) {
-        sprice_dynamics <- all.vars(substitute(
-          price_dynamics,
-          env = sys.frame(which = n)
-        ))
-        if (all(sprice_dynamics %in% dnames)) {
-          price_dynamics <- paste0(sprice_dynamics, collapse = " + ")
-          found[7] <- TRUE
-        }
-      }
-    }
-
-    if (all(found)) {
-      rhs <- paste(demand, supply, sep = " | ")
-      if (length(found) == 7) {
-        rhs <- paste(rhs, price_dynamics, sep = " | ")
-      }
-      fm <- formula(paste0(
-        paste(quantity, price, subject, time, sep = " | "), " ~ ",
-        rhs
-      ))
-      break
-    }
-    n <- n - 1
-  }
-  tryCatch(
-    {
-      specification <- Formula::Formula(eval(fm))
-    },
-    error = function(e) {
-      part_names <- c(
-        "quantity", "price", "demand", "supply",
-        "subject", "time"
-      )
-      if (length(found) == 7) {
-        part_names <- c(part_names, "price_dynamics")
-      }
-      print_error(
-        logger, "Failed to substitute model formula parts: ",
-        paste0(part_names[!found], collapse = ", "), "."
-      )
-    }
+  fm <- paste0(
+    paste(quantity, price, subject, time, sep = " | "), " ~ ",
+    paste(demand, supply, sep = " | ")
   )
 
-  specification
+  if (!missing(price_dynamics)) {
+    if (is.language(price_dynamics)) {
+      price_dynamics <- paste0(deparse(price_dynamics, 500), collapse = "")
+    }
+    fm <- paste0(fm, " | ", price_dynamics)
+  }
+
+  Formula::Formula(formula(fm))
 }
 
 setMethod(
   "initialize", "market_model",
-  function(.Object, model_type_string, verbose,
+  function(.Object, model_name, verbose,
            specification,
            correlated_shocks,
            data,
            system_initializer) {
 
     ## Model assignments
-    .Object@model_type_string <- model_type_string
+    .Object@model_name <- model_name
     .Object@logger <- new("model_logger", verbose)
     .Object@system@correlated_shocks <- correlated_shocks
-    print_info(.Object@logger, "This is '", model_name(.Object), "' model")
+    print_info(.Object@logger, "This is ", name(.Object), " model.")
 
     .Object@subject_column <- all.vars(formula(specification, lhs = 3, rhs = 0))
     .Object@time_column <- all.vars(formula(specification, lhs = 4, rhs = 0))
@@ -253,16 +166,19 @@ setMethod(
     ))
 
     ## Data assignment
-    .Object@model_tibble <- data
+    .Object@data <- data
 
-    ## Create model tibble
-    len <- nrow(.Object@model_tibble)
-    .Object@model_tibble <- .Object@model_tibble %>%
-      dplyr::select(!!!.Object@columns) %>%
+    ## Create model data frame
+    len <- nrow(.Object@data)
+    .Object@data <- .Object@data |>
+      dplyr::select(!!!.Object@columns) |>
       na.omit()
-    drops <- len - nrow(.Object@model_tibble)
+    drops <- len - nrow(.Object@data)
     if (drops) {
-      print_warning(.Object@logger, "Dropping ", drops, " rows due to missing values.")
+      print_warning(
+        .Object@logger, "Dropping ", drops, " row", ifelse(drops > 1, "s", ""),
+        " due to missing values."
+      )
     }
 
     remove_unused_levels <- function(x) {
@@ -278,7 +194,7 @@ setMethod(
       }
       x
     }
-    .Object@model_tibble <- .Object@model_tibble %>%
+    .Object@data <- .Object@data |>
       dplyr::mutate(dplyr::across(
         where(is.factor),
         remove_unused_levels
@@ -286,11 +202,11 @@ setMethod(
 
     ## Create primary key column
     key_columns_syms <- rlang::syms(c(.Object@subject_column, .Object@time_column))
-    .Object@model_tibble <- .Object@model_tibble %>%
+    .Object@data <- .Object@data |>
       dplyr::mutate(pk = as.integer(paste0(!!!key_columns_syms)))
 
     ## Do we need to use lags?
-    if (.Object@model_type_string %in% c(
+    if (.Object@model_name %in% c(
       "Directional", "Deterministic Adjustment", "Stochastic Adjustment"
     )) {
       ## Generate lags
@@ -301,36 +217,40 @@ setMethod(
       lagged_price_column <- paste0("LAGGED_", price_column)
       lagged_price_sym <- rlang::sym(lagged_price_column)
 
-      .Object@model_tibble <- .Object@model_tibble %>%
-        dplyr::group_by(!!!subject_sym) %>%
+      .Object@data <- .Object@data |>
+        dplyr::group_by(!!!subject_sym) |>
         dplyr::mutate(
           !!lagged_price_sym := dplyr::lag(!!price_sym, order_by = !!time_sym)
-        ) %>%
+        ) |>
         dplyr::ungroup()
 
-      drop_rows <- .Object@model_tibble %>%
-        dplyr::select(!!lagged_price_sym) %>%
-        is.na() %>%
+      drop_rows <- .Object@data |>
+        dplyr::select(!!lagged_price_sym) |>
+        is.na() |>
         c()
-      .Object@model_tibble <- .Object@model_tibble[!drop_rows, ]
+      .Object@data <- .Object@data[!drop_rows, ]
+
+      drops <- sum(drop_rows)
       print_info(
         .Object@logger, "Dropping ",
-        sum(drop_rows), " rows to generate '", lagged_price_column, "'."
+        drops, " row", ifelse(drops > 1, "s", ""),
+        " to generate '", lagged_price_column, "'."
       )
 
       ## Generate first differences
       diff_column <- paste0(price_column, "_DIFF")
       diff_sym <- rlang::sym(diff_column)
 
-      .Object@model_tibble <- .Object@model_tibble %>%
-        dplyr::group_by(!!!subject_sym) %>%
-        dplyr::mutate(!!diff_sym := !!price_sym - !!lagged_price_sym) %>%
-        dplyr::ungroup()
+      .Object@data <- .Object@data |>
+        dplyr::group_by(!!!subject_sym) |>
+        dplyr::mutate(!!diff_sym := !!price_sym - !!lagged_price_sym) |>
+        dplyr::ungroup() |>
+        as.data.frame()
     }
 
     .Object@system <- system_initializer(
       specification,
-      .Object@model_tibble, correlated_shocks
+      .Object@data, correlated_shocks
     )
 
     print_verbose(
@@ -343,8 +263,7 @@ setMethod(
 )
 
 initialize_from_formula <- function(model_type, specification, data,
-                                    correlated_shocks, verbose,
-                                    estimation_options) {
+                                    correlated_shocks, verbose) {
   specification <- Formula::Formula(specification)
   quantity <- terms(specification, lhs = 1, rhs = 0)[[2]]
   price <- terms(specification, lhs = 2, rhs = 0)[[2]]
@@ -363,7 +282,15 @@ initialize_from_formula <- function(model_type, specification, data,
     price_dynamics <- terms(specification, lhs = 0, rhs = 3)[[2]]
     args <- append(args, price_dynamics)
   }
-  model <- do.call(new, args)
+  do.call(new, args)
+}
+
+initialize_and_estimate <- function(model_type, specification, data,
+                                    correlated_shocks, verbose,
+                                    estimation_options) {
+  model <- initialize_from_formula(
+    model_type, specification, data, correlated_shocks, verbose
+  )
   if (length(estimation_options)) {
     do.call(markets::estimate, c(list(model), estimation_options))
   } else {
@@ -379,7 +306,7 @@ initialize_from_formula <- function(model_type, specification, data,
 #' functionality of the package. The functions expect a formula following the
 #' specification described in \link[=market_model_formula]{formula}, a
 #' dataset, and optionally further initialization (see
-#' \link[=initialize_market_model]{model initialization}) and
+#' \link[=model_initialization]{model initialization}) and
 #' estimation (see \link[=estimate]{model estimation}) options.
 #'
 #' Each of these functions parses the passed formula, initializes the model
@@ -482,21 +409,25 @@ setMethod(
 #' @rdname show
 #' @export
 setMethod("show", signature(object = "market_model"), function(object) {
-  cat(sprintf(
-    "%s Model for Markets in %s\n",
-    object@model_type_string, object@market_type_string
-  ))
+  cat(
+    sprintf(
+      "%s Model for Markets in %s:",
+      object@model_name, object@market_type
+    ),
+    sep = "", fill = TRUE
+  )
   show_implementation(object@system)
-  cat(sprintf(
-    "  %-18s: %s\n", "Shocks",
-    ifelse(object@system@correlated_shocks, "Correlated", "Independent")
-  ))
+  cat(
+    labels = sprintf("  %-18s:", "Shocks"),
+    ifelse(object@system@correlated_shocks, "Correlated", "Independent"),
+    sep = "", fill = TRUE
+  )
 })
 
 #' @title Model and fit summaries
 #' @description Methods that summarize models and their estimates.
 #' @param object An object to be summarized.
-#' @name summaries
+#' @name summary
 #' @examples
 #' \donttest{
 #' model <- simulate_model(
@@ -518,13 +449,13 @@ setMethod("show", signature(object = "market_model"), function(object) {
 #'
 #' # estimate
 #' fit <- estimate(model)
-#' 
+#'
 #' # print estimation summary
 #' summary(fit)
 #' }
 NULL
 
-#' @describeIn summaries Summarizes the model.
+#' @describeIn summary Summarizes the model.
 #' @description \code{market_model}: Prints basic information about the
 #' passed model object. In addition to the output of
 #' the \code{\link{show}} method, \code{summary} prints
@@ -537,23 +468,36 @@ NULL
 #' @export
 setMethod("summary", signature(object = "market_model"), function(object) {
   show(object)
-  cat(sprintf("  %-18s: %d\n", "Nobs", nrow(object@model_tibble)))
+  cat(
+    labels = sprintf("  %-18s:", "Nobs"), nrow(object@data),
+    sep = "", fill = TRUE
+  )
   summary_implementation(object@system)
-  cat(sprintf(
-    "  %-18s: %s\n", "Key Var(s)",
-    paste0(c(object@subject_column, object@time_column), collapse = ", ")
-  ))
+  cat(
+    labels = sprintf("  %-18s:", "Key Var(s)"),
+    paste0(c(object@subject_column, object@time_column), collapse = ", "),
+    sep = "", fill = TRUE
+  )
   if (!is.null(object@time_column)) {
-    cat(sprintf(
-      "  %-18s: %s\n", "Time Var",
-      paste0(object@time_column, collapse = ", ")
-    ))
+    cat(
+      labels = sprintf("  %-18s:", "Time Var"),
+      paste0(object@time_column, collapse = ", "),
+      sep = "", fill = TRUE
+    )
   }
 })
 
-#' Minus log-likelihood.
+
+#' @title Model likelihoods and derivatives.
+#' @description Methods that calculate the likelihoods, scores, gradients, and Hessians
+#' of market models.
+#' @name model_likelihoods
+NULL
+
+#' @title Log-likelihood
 #'
-#' Returns the opposite of the log-likelihood. The likelihood functions are based on
+#' @description
+#' Returns the log-likelihood. The likelihood functions are based on
 #' Maddala and Nelson (1974) \doi{10.2307/1914215}. The likelihoods expressions
 #' that the function uses are derived in
 #' Karapanagiotis (2020) \doi{10.2139/ssrn.3525622}. The function calculates
@@ -561,34 +505,34 @@ setMethod("summary", signature(object = "market_model"), function(object) {
 #' the sample and summing the evaluation results.
 #' @param object A model object.
 #' @param parameters A vector of parameters at which the function is to be evaluated.
-#' @return The opposite of the sum of the likelihoods evaluated for each observation.
-#' @rdname minus_log_likelihood
+#' @return The sum of the likelihoods evaluated for each observation.
+#' @rdname model_likelihoods
 #' @export
-setGeneric("minus_log_likelihood", function(object, parameters) {
-  standardGeneric("minus_log_likelihood")
+setGeneric("log_likelihood", function(object, parameters) {
+  standardGeneric("log_likelihood")
 })
 
-#' Gradient
+#' @title Gradient
 #'
-#' Returns the gradient of the opposite of the log-likelihood evaluated at the passed
-#' parameters.
+#' @description
+#' Returns the gradient of the log-likelihood evaluated at the passed parameters.
 #' @param object A model object.
 #' @param parameters A vector of parameters at which the gradient is to be evaluated.
-#' @return The opposite of the model log likelihood's gradient.
-#' @rdname gradient
+#' @return The log likelihood's gradient.
+#' @rdname model_likelihoods
 #' @export
 setGeneric("gradient", function(object, parameters) {
   standardGeneric("gradient")
 })
 
-#' Hessian
+#' @title Hessian
 #'
-#' Returns the hessian of the opposite of the log-likelihood evaluated at the passed
-#' parameters.
+#' @description
+#' Returns the hessian of the log-likelihood evaluated at the passed parameters.
 #' @param object A model object.
 #' @param parameters A vector of parameters at which the hessian is to be evaluated.
-#' @return The opposite of the model log likelihood's hessian.
-#' @rdname hessian
+#' @return The log likelihood's hessian.
+#' @rdname model_likelihoods
 #' @export
 setGeneric("hessian", function(object, parameters) {
   standardGeneric("hessian")
@@ -663,9 +607,9 @@ validate_standard_error_option <- function(object, option) {
 #'     # observed entities, observed time points
 #'     nobs = 500, tobs = 3,
 #'     # demand coefficients
-#'     alpha_d = -0.9, beta_d0 = 14.9, beta_d = c(0.3, -0.2), eta_d = c(-0.03, -0.01),
+#'     alpha_d = -1.9, beta_d0 = 24.9, beta_d = c(2.3, -1.2), eta_d = c(2.0, -1.5),
 #'     # supply coefficients
-#'     alpha_s = 0.9, beta_s0 = 3.2, beta_s = c(0.03), eta_s = c(0.05, 0.02)
+#'     alpha_s = .9, beta_s0 = 8.2, beta_s = c(3.3), eta_s = c(1.5, -2.2)
 #'   ),
 #'   seed = 99
 #' )
@@ -673,7 +617,7 @@ validate_standard_error_option <- function(object, option) {
 #' # maximize the model's log-likelihood
 #' mll <- maximize_log_likelihood(
 #'   model,
-#'   start = NULL, step = 1e-5,
+#'   start = NULL, step = 1e-2,
 #'   objective_tolerance = 1e-4, gradient_tolerance = 1e-3, max_it = 1e+3
 #' )
 #' mll
@@ -697,7 +641,7 @@ setGeneric("maximize_log_likelihood", function(object, start, step, objective_to
 #' @param parameters A vector with model parameters.
 #' @param fit A fitted model object.
 #' @return The score matrix.
-#' @rdname scores
+#' @rdname model_likelihoods
 #' @examples
 #' \donttest{
 #' model <- simulate_model(
@@ -719,7 +663,7 @@ setGeneric("maximize_log_likelihood", function(object, start, step, objective_to
 #' head(scores(model, coef(fit)))
 #' }
 #' @export
-setGeneric("scores", function(object, parameters, fit = missing()) {
+setGeneric("scores", function(object, parameters, fit) {
   standardGeneric("scores")
 })
 
@@ -731,18 +675,67 @@ setGeneric("set_clustered_errors", function(object, ...) {
   standardGeneric("set_clustered_errors")
 })
 
-#' Model description.
+#' @title Short model and market descriptions
+#'
+#' @name model_description
+NULL
+
+#' Model name.
 #'
 #' A unique identifying string for the model.
 #' @param object A model object.
 #' @return A string representation of the model.
-#' @rdname model_name
+#' @examples
+#' # initialize the equilibrium using the houses dataset
+#' model <- new(
+#'   "equilibrium_model", # model type
+#'   subject = ID, time = TREND, quantity = HS, price = RM,
+#'   demand = RM + TREND + W + CSHS + L1RM + L2RM + MONTH,
+#'   supply = RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+#'   fair_houses()
+#' )
+#'
+#' name(model)
+#' @rdname model_description
 #' @export
-setGeneric("model_name", function(object) {
-  standardGeneric("model_name")
+setGeneric("name", function(object) {
+  standardGeneric("name")
 })
 
-#' @title Market side descriptive statistics
+#' Model description.
+#'
+#' A short (one-liner) description of the market model.
+#' @param object A model object.
+#' @return A model description string.
+#' @examples
+#' # initialize the basic model using the houses dataset
+#' model <- new(
+#'   "diseq_basic", # model type
+#'   subject = ID, time = TREND, quantity = HS, price = RM,
+#'   demand = RM + TREND + W + CSHS + L1RM + L2RM + MONTH,
+#'   supply = RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+#'   fair_houses()
+#' )
+#'
+#' describe(model)
+#' @rdname model_description
+#' @export
+setGeneric("describe", function(object) {
+  standardGeneric("describe")
+})
+
+#' Market type.
+#'
+#' A market type string (equilibrium or disequilibrium) for a given model.
+#' @param object A model object.
+#' @return A string representation of the model.
+#' @rdname model_description
+#' @export
+setGeneric("market_type", function(object) {
+  standardGeneric("market_type")
+})
+
+#' @title Market force data descriptive statistics
 #' @details Calculates and returns basic descriptive statistics for the model's demand
 #' or supply side data. Factor variables are excluded from the calculations. The function
 #' calculates and returns:
@@ -762,7 +755,7 @@ setGeneric("model_name", function(object) {
 #' \item \code{coef_var} Coefficient of variation.
 #' }
 #' @param object A model object.
-#' @return A data \code{tibble} containing descriptive statistics.
+#' @return A data frame containing descriptive statistics.
 #' @examples
 #' # initialize the basic model using the houses dataset
 #' model <- new(
@@ -801,11 +794,11 @@ setGeneric("supply_descriptives", function(object) {
 setMethod(
   "set_heteroscedasticity_consistent_errors", signature(object = "market_model"),
   function(object, fit) {
-    fit@details$original_hessian <- fit@details$hessian
-    scores <- scores(object, coef(fit))
+    fit$original_hessian <- fit$hessian
+    scores <- scores(object, fit$par)
     adjustment <- MASS::ginv(t(scores) %*% scores)
-    fit@details$hessian <- fit@details$hessian %*% adjustment %*% fit@details$hessian
-    fit@vcov <- MASS::ginv(fit@details$hessian)
+    fit$hessian <- fit$hessian %*% adjustment %*% fit$hessian
+    fit$vcov <- MASS::ginv(fit$hessian)
     fit
   }
 )
@@ -813,36 +806,48 @@ setMethod(
 setMethod(
   "set_clustered_errors", signature(object = "market_model"),
   function(object, fit, cluster_errors_by) {
-    if (!(cluster_errors_by %in% names(object@model_tibble))) {
+    if (!(cluster_errors_by %in% names(object@data))) {
       print_error(
         object@logger, "Cluster variable is not among model data variables."
       )
     }
-    fit@details$original_hessian <- fit@details$hessian
+    fit$original_hessian <- fit$hessian
     cluster_var <- rlang::syms(cluster_errors_by)
-    clustered_scores <- tibble::tibble(
-      object@model_tibble %>% dplyr::select(!!!cluster_var),
-      tibble::as_tibble(scores(object, coef(fit)))
-    ) %>%
-      dplyr::group_by(!!!cluster_var) %>%
+    clustered_scores <- data.frame(
+      object@data |> dplyr::select(!!!cluster_var),
+      as.data.frame(scores(object, fit$par))
+    ) |>
+      dplyr::group_by(!!!cluster_var) |>
       dplyr::group_map(~ t(as.matrix(.)) %*% (as.matrix(.)))
-    fit@details$number_of_clusters <- length(clustered_scores)
+    fit$number_of_clusters <- length(clustered_scores)
     adjustment <- MASS::ginv(Reduce("+", clustered_scores))
-    fit@details$hessian <- fit@details$hessian %*% adjustment %*% fit@details$hessian
-    fit@vcov <- MASS::ginv(fit@details$hessian) * (
-      fit@details$number_of_clusters / (fit@details$number_of_clusters - 1)
+    fit$hessian <- fit$hessian %*% adjustment %*% fit$hessian
+    fit$vcov <- MASS::ginv(fit$hessian) * (
+      fit$number_of_clusters / (fit$number_of_clusters - 1)
     )
     fit
   }
 )
 
-#' @rdname model_name
-setMethod("model_name", signature(object = "market_model"), function(object) {
+#' @rdname model_description
+setMethod(
+  "name", signature(object = "market_model"),
+  function(object) object@model_name
+)
+
+#' @rdname model_description
+setMethod("describe", signature(object = "market_model"), function(object) {
   paste0(
-    object@model_type_string, " with ",
+    object@model_name, " with ",
     ifelse(object@system@correlated_shocks, "correlated", "independent"), " shocks"
   )
 })
+
+#' @rdname model_description
+setMethod(
+  "market_type", signature(object = "market_model"),
+  function(object) object@market_type
+)
 
 #' Number of observations.
 #'
@@ -856,7 +861,7 @@ setMethod("model_name", signature(object = "market_model"), function(object) {
 setMethod(
   "nobs", signature(object = "market_model"),
   function(object) {
-    nrow(object@model_tibble)
+    nrow(object@data)
   }
 )
 
@@ -868,11 +873,11 @@ setMethod(
     }
     variables <- variables[sapply(
       variables,
-      function(c) !is.factor(object@model_tibble[[c]])
+      function(c) !is.factor(object@data[[c]])
     )]
 
-    tibble::as_tibble(apply(
-      object@model_tibble[, variables], 2,
+    as.data.frame(apply(
+      object@data[, variables], 2,
       function(x) {
         c(
           nobs = length(x), nmval = sum(is.na(x)),
@@ -946,8 +951,8 @@ setMethod(
 #' \donttest{
 #' fit <- diseq_basic(
 #'   HS | RM | ID | TREND ~
-#'   RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-#'     RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+#'     RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+#'       RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
 #'   fair_houses(),
 #'   correlated_shocks = FALSE
 #' )
@@ -986,12 +991,12 @@ aggregate_equation <- function(model, parameters, equation) {
   model@system <- set_parameters(model@system, parameters)
   qs <- quantities(slot(model@system, equation))
   result <- NULL
-  if (nrow(unique(model@model_tibble[, model@subject_column])) > 1) {
+  if (length(unique(model@data[, model@subject_column])) > 1) {
     time_symbol <- rlang::sym(model@time_column)
     aggregate_symbol <- rlang::sym(colnames(qs))
-    result <- model@model_tibble[, model@time_column] %>%
-      dplyr::mutate(!!aggregate_symbol := qs) %>%
-      dplyr::group_by(!!time_symbol) %>%
+    result <- data.frame(model@data[, model@time_column], qs) |>
+      dplyr::rename(!!time_symbol := 1) |>
+      dplyr::group_by(!!time_symbol) |>
       dplyr::summarise(!!aggregate_symbol := sum(!!aggregate_symbol))
   } else {
     result <- sum(qs)
@@ -1027,8 +1032,8 @@ setMethod(
 #' \donttest{
 #' fit <- diseq_basic(
 #'   HS | RM | ID | TREND ~
-#'   RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-#'     RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+#'     RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+#'       RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
 #'   fair_houses(),
 #'   correlated_shocks = FALSE
 #' )
@@ -1102,10 +1107,12 @@ setMethod(
 #' # estimate a model using the houses dataset
 #' fit <- diseq_deterministic_adjustment(
 #'   HS | RM | ID | TREND ~
-#'   RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-#'   RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
-#'   fair_houses(),  correlated_shocks = FALSE,
-#'   estimation_options = list(control = list(maxit = 1e+5)))
+#'     RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+#'       RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+#'   fair_houses(),
+#'   correlated_shocks = FALSE,
+#'   estimation_options = list(control = list(maxit = 1e+5))
+#' )
 #'
 #' # get estimated normalized shortages
 #' head(normalized_shortages(fit))
@@ -1210,10 +1217,12 @@ setGeneric("shortage_standard_deviation", function(fit, model, parameters) {
 #' # estimate a model using the houses dataset
 #' fit <- diseq_deterministic_adjustment(
 #'   HS | RM | ID | TREND ~
-#'   RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-#'   RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
-#'   fair_houses(),  correlated_shocks = FALSE,
-#'   estimation_options = list(control = list(maxit = 1e+5)))
+#'     RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+#'       RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+#'   fair_houses(),
+#'   correlated_shocks = FALSE,
+#'   estimation_options = list(control = list(maxit = 1e+5))
+#' )
 #'
 #' # mean marginal effect of variable "RM" on the shortage probabilities
 #' #' shortage_probability_marginal(fit, "RM")

@@ -5,7 +5,6 @@ if (requireNamespace("knitr", quietly = TRUE)) {
 
 ## ----setup.libraries----------------------------------------------------------
 library(markets)
-library(magrittr)
 
 ## ----setup.data---------------------------------------------------------------
 nobs <- 1000
@@ -74,7 +73,7 @@ da_fit <- diseq_deterministic_adjustment(
 )
 
 ## ----analysis.summaries-------------------------------------------------------
-summary(eq_reg@fit[[1]]$first_stage_model)
+summary(eq_reg@fit$first_stage_model)
 summary(eq_reg)
 summary(eq_fit)
 summary(bs_fit)
@@ -93,14 +92,16 @@ sim_coef <- c(
 )
 
 coef_tbl <- function(fit) {
-    tibble::tibble(coef = names(coef(fit)),!!substitute(fit) := coef(fit))
+    dt <- data.frame(names(coef(fit)), coef(fit))
+    names(dt) <- c("coef", substitute(fit))
+    dt
 }
 
-comp <- coef_tbl(da_fit) %>% 
-    dplyr::left_join(coef_tbl(bs_fit), by = "coef") %>%
-    dplyr::left_join(coef_tbl(eq_reg), by = "coef") %>%
-    dplyr::left_join(coef_tbl(eq_fit), by = "coef") %>%
-    dplyr::mutate(sim = sim_coef) %>%
+comp <- coef_tbl(da_fit) |> 
+    dplyr::left_join(coef_tbl(bs_fit), by = "coef") |>
+    dplyr::left_join(coef_tbl(eq_reg), by = "coef") |>
+    dplyr::left_join(coef_tbl(eq_fit), by = "coef") |>
+    dplyr::mutate(sim = sim_coef) |>
     dplyr::mutate(sim = sim_coef,
                   da_fit_err = abs(da_fit - sim),
                   bs_fit_err = abs(bs_fit - sim),
@@ -114,13 +115,13 @@ model_errors
 
 ## ----analysis.model.selection-------------------------------------------------
 fits <- c(da_fit, bs_fit, eq_fit)
-model_names <- sapply(fits, function(m) m@model_type_string)
+model_names <- sapply(fits, function(m) name(m))
 model_obs <- sapply(fits, nobs)
 aic <- sapply(fits, AIC)
 df <- sapply(fits, function(m) attr(logLik(m), "df"))
-seltbl <- tibble::tibble(Model = model_names, AIC = aic,
+seltbl <- data.frame(Model = model_names, AIC = aic,
                          D.F = df, Obs. = model_obs,
-                         Abs.Error = model_errors) %>%
+                         Abs.Error = model_errors) |>
   dplyr::arrange(AIC)
 seltbl
 

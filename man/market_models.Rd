@@ -122,13 +122,15 @@ quantity, price and explanatory columns.}
 
 \item{\code{columns}}{Vector of primary key and data column names for all model's equations.}
 
-\item{\code{model_tibble}}{Model data \code{tibble}.}
+\item{\code{data}}{Model data frame.}
 
-\item{\code{model_type_string}}{Model type string description.}
+\item{\code{model_name}}{Model name string.}
+
+\item{\code{market_type}}{Market type string.}
 
 \item{\code{system}}{Model's system of equations.}
 }}
 
 \seealso{
-\link{initialize_market_model}
+\link{model_initialization}
 }

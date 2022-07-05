@@ -67,7 +67,7 @@ simulate_model(
   simulation_parameters,
   seed = NA,
   verbose = 0,
-  ...
+  correlated_shocks = TRUE
 )
 
 \S4method{simulate_model}{ANY}(
@@ -75,7 +75,7 @@ simulate_model(
   simulation_parameters,
   seed = NA,
   verbose = 0,
-  ...
+  correlated_shocks = TRUE
 )
 }
 \arguments{
@@ -134,7 +134,7 @@ controls. The default generator is \eqn{N(2.5, 0.25)}.}
 \item{simulation_parameters}{List of parameters used in model simulation. See the
 \code{\link{simulate_data}} function for details.}
 
-\item{...}{Additional parameters to be passed to the model's constructor.}
+\item{correlated_shocks}{Should the model be estimated using correlated shocks?}
 }
 \value{
 \strong{\code{simulate_data}:} The simulated data.
@@ -146,13 +146,13 @@ Market data and model simulation functionality based on the data
 generating process induced by the market model specifications.
 
 \subsection{\code{simulate_data}}{
-Returns a data \code{tibble} with simulated data from a generating process that
+Returns a data frame with simulated data from a generating process that
 matches the passed model string. By default, the simulated observations of the
 controls are drawn from a normal distribution.
 }
 
 \subsection{\code{simulate_model}}{
-Simulates a data \code{tibble} based on the generating process of the passed model
+Simulates a data frame based on the generating process of the passed model
 and uses it to initialize a model object. Data are simulated using the
 \code{\link{simulate_data}} function.
 }

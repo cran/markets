@@ -3,6 +3,7 @@
 \docType{package}
 \name{markets}
 \alias{markets}
+\alias{markets-package}
 \title{Estimation of models for markets in equilibrium and disequilibrium}
 \description{
 The \code{markets} package provides tools to estimate and analyze an equilibrium and
@@ -60,3 +61,17 @@ the documentation of the classes for initialization details.
     }
 }
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/pi-kappa-devel/markets/}
+  \item \url{https://markets.pikappa.eu/}
+  \item Report bugs at \url{https://github.com/pi-kappa-devel/markets/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Pantelis Karapanagiotis \email{pikappa.devel@gmail.com} (\href{https://orcid.org/0000-0001-9871-1908}{ORCID})
+
+}
+\keyword{internal}

@@ -51,8 +51,8 @@ each observation at the passed vector of parameters.
 \donttest{
 fit <- diseq_basic(
   HS | RM | ID | TREND ~
-  RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-    RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+    RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+      RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
   fair_houses(),
   correlated_shocks = FALSE
 )

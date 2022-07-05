@@ -59,9 +59,9 @@ model <- simulate_model(
     # observed entities, observed time points
     nobs = 500, tobs = 3,
     # demand coefficients
-    alpha_d = -0.9, beta_d0 = 14.9, beta_d = c(0.3, -0.2), eta_d = c(-0.03, -0.01),
+    alpha_d = -1.9, beta_d0 = 24.9, beta_d = c(2.3, -1.2), eta_d = c(2.0, -1.5),
     # supply coefficients
-    alpha_s = 0.9, beta_s0 = 3.2, beta_s = c(0.03), eta_s = c(0.05, 0.02)
+    alpha_s = .9, beta_s0 = 8.2, beta_s = c(3.3), eta_s = c(1.5, -2.2)
   ),
   seed = 99
 )
@@ -69,7 +69,7 @@ model <- simulate_model(
 # maximize the model's log-likelihood
 mll <- maximize_log_likelihood(
   model,
-  start = NULL, step = 1e-5,
+  start = NULL, step = 1e-2,
   objective_tolerance = 1e-4, gradient_tolerance = 1e-3, max_it = 1e+3
 )
 mll

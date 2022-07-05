@@ -93,3 +93,4 @@ of independent variables without prices.}
 sample described by this equation according to the separation rule of the model.}
 }}
 
+\keyword{internal}

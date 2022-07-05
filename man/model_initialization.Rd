@@ -2,8 +2,8 @@
 % Please edit documentation in R/market_model.R, R/diseq_basic.R,
 %   R/diseq_deterministic_adjustment.R, R/diseq_directional.R,
 %   R/diseq_stochastic_adjustment.R, R/equilibrium_model.R
-\name{initialize_market_model}
-\alias{initialize_market_model}
+\name{model_initialization}
+\alias{model_initialization}
 \alias{initialize,diseq_basic-method}
 \alias{initialize,diseq_deterministic_adjustment-method}
 \alias{initialize,diseq_directional-method}

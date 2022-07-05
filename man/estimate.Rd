@@ -21,11 +21,12 @@ estimate(object, ...)
 \arguments{
 \item{object}{A model object.}
 
-\item{...}{Named parameter used in the model's estimation. These are passed further
-down to the estimation call. For the \code{\linkS4class{equilibrium_model}} model, the
-parameters are passed to \code{\link[systemfit]{systemfit}}, if the method is set to
-\code{2SLS}, or to \code{\link[bbmle]{mle2}} for any other method. For the rest of
-the models, the parameters are passed to \code{\link[bbmle]{mle2}}.}
+\item{...}{Additional parameter used in the model's estimation. These are
+passed further down to the estimation call. For the
+\code{\linkS4class{equilibrium_model}} model, the parameters are passed to
+\code{\link[stats]{lm}}, if the method is set to
+\code{2SLS}, or to \code{\link[stats]{optim}} for any other method. For the rest of
+the models, the parameters are passed to \code{\link[stats]{optim}}.}
 
 \item{gradient}{One of two potential options: \code{"numerical"} and
 \code{"calculated"}. By default, all the models are estimated using the
@@ -49,9 +50,9 @@ grouping the score matrix based on the passed variables.}
 \item{method}{A string specifying the estimation method. When the passed value is
 among \code{Nelder-Mead}, \code{BFGS}, \code{CG}, \code{L-BFGS-B}, \code{SANN},
 and \code{Brent}, the model is estimated using
-full information maximum likelihood based on \code{\link[bbmle]{mle2}} functionality.
+full information maximum likelihood based on \code{\link[stats]{optim}} functionality.
 When \code{2SLS} is supplied, the model is estimated using two-stage least squares
-based on \code{\link[systemfit]{systemfit}}. In this case, the function returns a
+using \code{\link[stats]{lm}}. In this case, the function returns a
 list containing the first and second stage estimates. The default value is
 \code{BFGS}.}
 }
@@ -62,11 +63,11 @@ The object that holds the estimation result.
 All models are estimated using full information maximum likelihood. The
 \code{\linkS4class{equilibrium_model}} can also be estimated using two-stage
 least squares. The maximum likelihood estimation is based on
-\code{\link[bbmle]{mle2}}. If no starting values are provided, the function uses
+\code{\link[stats]{optim}}. If no starting values are provided, the function uses
 linear regression estimates as initializing values. The default optimization method is
-BFGS. For other alternatives see \code{\link[bbmle]{mle2}}. The implementation of
+BFGS. For other alternatives see \code{\link[stats]{optim}}. The implementation of
 the two-stage least square estimation of the \code{\linkS4class{equilibrium_model}}
-is based on \code{\link[systemfit]{systemfit}}.
+is based on \code{\link[stats]{lm}}.
 }
 \section{Functions}{
 \itemize{

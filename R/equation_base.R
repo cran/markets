@@ -6,6 +6,7 @@ setOldClass(c("Formula"))
 #'
 #' @details Classes with data and functionality describing equations of model systems.
 #' @name equation_classes
+#' @keywords internal
 NULL
 
 #' @describeIn equation_classes Equation base class
@@ -71,11 +72,11 @@ setMethod(
       paste(prefixed_specification, collapse = ""),
       lhs = 1
     ))
-    .Object@dependent_vector <- as.matrix(model.part(.Object@formula,
-      lhs = 1, data
-    ))
-    .Object@price_vector <- as.matrix(model.part(.Object@formula,
-      lhs = 2, data
+    .Object@dependent_vector <- as.matrix(model.frame(.Object@formula,
+      lhs = 1, rhs = 0, data
+      ))
+    .Object@price_vector <- as.matrix(model.frame(.Object@formula,
+      lhs = 2, rhs = 0, data
     ))
     .Object@independent_matrix <- model.matrix(.Object@formula, data)
     colnames(.Object@independent_matrix) <- gsub(
@@ -104,10 +105,14 @@ setGeneric("show_implementation", function(object) {
 })
 
 setMethod("show_implementation", signature(object = "equation_base"), function(object) {
-  cat(sprintf(
-    "  %-18s: %s\n", paste0(object@name, " RHS"),
-    deparse(object@formula[[3]])
-  ))
+  cat(
+    strwrap(
+      initial = sprintf("  %-18s: ", paste0(object@name, " RHS")),
+      deparse(object@formula[[3]]),
+      indent = 2, exdent = 4
+    ),
+    sep = "", fill = TRUE
+  )
 })
 
 #' @title Variable name access
@@ -129,7 +134,7 @@ setGeneric("prefixed_const_variable", function(object) {
 #' @describeIn variable_names Independent variable names.
 #' @description \code{prefixed_independent_variables}: The names of the independent
 #' variables are constructed by concatenating the equation prefix with the column names
-#' of the data \code{tibble}.
+#' of the model's data frame.
 #' @export
 setGeneric("prefixed_independent_variables", function(object) {
   standardGeneric("prefixed_independent_variables")
@@ -292,4 +297,3 @@ setMethod("quantities", signature(object = "equation_base"), function(object) {
   colnames(qs) <- prefixed_quantity_variable(object)
   qs
 })
-

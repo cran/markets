@@ -136,7 +136,7 @@ setMethod(
     # needed in the models' calculations. We only need to adjust the formula
     # for the `show` and `summary` functions.
     .Object@price_equation@formula <- Formula(formula(paste0(
-      price_differences_variable(.Object), " ~ (",
+      price_differences_variable(.Object), " ~ I(",
       prefixed_quantity_variable(.Object@demand), " - ",
       prefixed_quantity_variable(.Object@supply), ") + ",
       deparse(terms(specification, lhs = 0, rhs = 3)[[2]])
@@ -153,13 +153,13 @@ setMethod(
   function(object) {
     callNextMethod(object)
     show_implementation(object@price_equation)
-    cat(sprintf(
-      "  %-18s: %s\n", "Short Side Rule", paste0(
-        quantity_variable(object@demand), " = min(",
-        prefixed_quantity_variable(object@demand), ", ",
-        prefixed_quantity_variable(object@supply), ")"
-      )
-    ))
+    cat(
+      labels = sprintf("  %-18s:", "Short Side Rule"),
+      quantity_variable(object@demand), " = min(",
+      prefixed_quantity_variable(object@demand), ", ",
+      prefixed_quantity_variable(object@supply), ")",
+      sep = "", fill = TRUE
+    )
   }
 )
 

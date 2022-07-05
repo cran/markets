@@ -1,3 +1,80 @@
+# markets 1.0.6
+
+* Cumulative update of CRAN version. 
+* Improvements in the organization of the documentation.
+
+# markets 1.0.5.9013
+
+* Fixed bug in `maximize_log_likelihood` introduced in 1.0.5.9012.
+
+# markets 1.0.5.9012
+
+* Removed dependency to package `systemfit`. Linear estimations of the equilibrium model use `ls`.
+
+# markets 1.0.5.9011
+
+* Removed dependency to package `tidyr`. Using `expand.grid` instead of `crossing`.
+
+# markets 1.0.5.9010
+
+* Removed dependency to package `tibble`. Using data frames for storing model data.
+
+# markets 1.0.5.9009
+
+* Updated package paper.
+
+# markets 1.0.5.9008
+
+* Changed the relationship between market models and fits from 'is a' to 'has a' to avoid class union inheritance issues.
+
+# markets 1.0.5.9007
+
+* Remove experimental code introduced with 1.0.5.9002 from vignettes.
+
+# markets 1.0.5.9006
+
+* Fixed Hessian skipping bug introduced with 1.0.5.9004.
+
+# markets 1.0.5.9005
+
+* Updated formula implementation to allow using inline variable transformations (offset, splines, log, etc). Added unit tests checking the updated functionality.	
+
+# markets 1.0.5.9004
+
+* Replaced `minus_log_likelihood` with `log_likelihood` and adjusted `gradient`, `scores` and `hessian`. Gradient and hessian return derivatives of log-likelihood instead of derivatives of minus log-likelihood.
+
+# markets 1.0.5.9003
+
+* Re-implemented the logging, the summary, and the show functionality to respect the width set in `options()`.
+
+# markets 1.0.5.9002
+
+* Removed `bbmle` imports from all files.
+
+# markets 1.0.5.9001
+
+* Minor vignette changes adjusting to dropping `bbmle` from the dependencies.
+
+# markets 1.0.5
+
+* Removed dependency to package `bbmle`. Using directly `optim` for maximum likelihood estimations.
+
+# markets 1.0.4.9003
+
+* Patched logging functionality to respect the console width set in options.
+
+# markets 1.0.4.9002
+
+* Removed logger, equation, and system back-end classes from documentation.
+
+# markets 1.0.4.9001
+
+* Removed faulty default from the generic of function `scores`.
+
+# markets 1.0.4
+
+* Removed dependency to package `magrittr`.
+
 # markets 1.0.3
 
 * Updated package vignette (PDF manuscript) to reflect the latest functionality.

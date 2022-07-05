@@ -25,7 +25,7 @@ setClass(
   prototype()
 )
 
-#' @describeIn initialize_market_model Disequilibrium model with stochastic price
+#' @describeIn model_initialization Disequilibrium model with stochastic price
 #'   adjustment constructor
 #' @examples
 #' simulated_data <- simulate_data(
@@ -56,7 +56,9 @@ setMethod(
            quantity, price, demand, supply, price_dynamics, subject, time,
            data, correlated_shocks = TRUE, verbose = 0) {
     specification <- make_specification(
-      data, quantity, price, demand, supply, subject, time, price_dynamics
+      substitute(quantity), substitute(price),
+      substitute(demand), substitute(supply), substitute(subject), substitute(time),
+      substitute(price_dynamics)
     )
     .Object <- callNextMethod(
       .Object, "Stochastic Adjustment", verbose,
@@ -85,7 +87,7 @@ setMethod(
   "diseq_stochastic_adjustment", signature(specification = "formula"),
   function(specification, data, correlated_shocks, verbose,
            estimation_options) {
-    initialize_from_formula(
+    initialize_and_estimate(
       "diseq_stochastic_adjustment", specification, data,
       correlated_shocks, verbose, estimation_options
     )
@@ -113,8 +115,7 @@ setMethod(
   function(object) {
     start <- callNextMethod(object)
 
-    lhs <- object@model_tibble[, price_differences_variable(object@system)] %>%
-      dplyr::pull()
+    lhs <- object@data[, price_differences_variable(object@system)]
     rhs <- cbind(
       object@system@quantity_vector,
       object@system@price_equation@independent_matrix
@@ -146,30 +147,30 @@ setMethod(
   }
 )
 
-#' @rdname minus_log_likelihood
+#' @rdname model_likelihoods
 setMethod(
-  "minus_log_likelihood", signature(object = "diseq_stochastic_adjustment"),
+  "log_likelihood", signature(object = "diseq_stochastic_adjustment"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -sum(calculate_system_loglikelihood(object@system))
+    sum(calculate_system_loglikelihood(object@system))
   }
 )
 
-#' @rdname gradient
+#' @rdname model_likelihoods
 setMethod(
   "gradient", signature(object = "diseq_stochastic_adjustment"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -colSums(calculate_system_scores(object@system))
+    colSums(calculate_system_scores(object@system))
   }
 )
 
-#' @rdname scores
+#' @rdname model_likelihoods
 setMethod(
   "scores", signature(object = "diseq_stochastic_adjustment"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -calculate_system_scores(object@system)
+    calculate_system_scores(object@system)
   }
 )
 
@@ -197,8 +198,7 @@ setMethod(
     var_s <- var(supply$residuals)
     names(var_s) <- prefixed_variance_variable(object@system@supply)
 
-    dp <- object@model_tibble[, price_differences_variable(object@system)] %>%
-      dplyr::pull()
+    dp <- object@data[, price_differences_variable(object@system)]
     xd <- demand$fitted.values - supply$fitted.values
     rhs <- cbind(xd, object@system@price_equation@independent_matrix)
     prices <- stats::lm(dp ~ rhs - 1)

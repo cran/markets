@@ -77,10 +77,12 @@ density.
 # estimate a model using the houses dataset
 fit <- diseq_deterministic_adjustment(
   HS | RM | ID | TREND ~
-  RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
-  RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
-  fair_houses(),  correlated_shocks = FALSE,
-  estimation_options = list(control = list(maxit = 1e+5)))
+    RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+      RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses(),
+  correlated_shocks = FALSE,
+  estimation_options = list(control = list(maxit = 1e+5))
+)
 
 # mean marginal effect of variable "RM" on the shortage probabilities
 #' shortage_probability_marginal(fit, "RM")

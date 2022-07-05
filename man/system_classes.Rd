@@ -183,3 +183,4 @@ h_{P}^2}{2\zeta_{DD}}}}
 \item{\code{L_S}}{Likelihood conditional on excess demand.}
 }}
 
+\keyword{internal}

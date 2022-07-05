@@ -26,7 +26,7 @@ setClass(
   prototype()
 )
 
-#' @describeIn initialize_market_model Directional disequilibrium model base constructor
+#' @describeIn model_initialization Directional disequilibrium model base constructor
 #' @examples
 #' \donttest{
 #' simulated_data <- simulate_data(
@@ -52,7 +52,8 @@ setMethod(
            quantity, price, demand, supply, subject, time,
            data, correlated_shocks = TRUE, verbose = 0) {
     specification <- make_specification(
-      data, quantity, price, demand, supply, subject, time
+      substitute(quantity), substitute(price),
+      substitute(demand), substitute(supply), substitute(subject), substitute(time)
     )
     .Object <- callNextMethod(
       .Object, "Directional", verbose,
@@ -69,15 +70,17 @@ setMethod(
       print_error(
         .Object@logger,
         "Price cannot be part of both the demand and supply equations here ",
-        "(See Maddala, (1974) <https://doi.org/10.2307/1914215>, p1021)"
+        "(See Maddala, (1974) <https://doi.org/10.2307/1914215>, p1021)."
       )
     }
 
+    ndrows <- sum(.Object@system@demand@separation_subset)
+    nsrows <- sum(.Object@system@supply@separation_subset)
     print_info(
       .Object@logger,
-      "Sample separated with ", sum(.Object@system@demand@separation_subset),
-      " rows in excess supply and ",
-      sum(.Object@system@supply@separation_subset), " in excess demand state."
+      "Sample separated with ", ndrows,
+      " row", ifelse(ndrows > 1, "s"), " in excess supply and ",
+      nsrows, " row", ifelse(ndrows > 1, "s"), " in excess demand states."
     )
 
     .Object
@@ -100,16 +103,16 @@ setMethod(
   "diseq_directional", signature(specification = "formula"),
   function(specification, data, correlated_shocks, verbose,
            estimation_options) {
-    initialize_from_formula(
+    initialize_and_estimate(
       "diseq_directional", specification, data, correlated_shocks, verbose,
       estimation_options
     )
   }
 )
 
-#' @rdname minus_log_likelihood
+#' @rdname model_likelihoods
 setMethod(
-  "minus_log_likelihood", signature(object = "diseq_directional"),
+  "log_likelihood", signature(object = "diseq_directional"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
 
@@ -121,25 +124,25 @@ setMethod(
       log(object@system@supply@Psi[object@system@supply@separation_subset] /
         object@system@supply@sigma)
     )
-    -loglhd - loglhs
+    loglhd + loglhs
   }
 )
 
-#' @rdname gradient
+#' @rdname model_likelihoods
 setMethod(
   "gradient", signature(object = "diseq_directional"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -colSums(calculate_system_scores(object@system))
+    colSums(calculate_system_scores(object@system))
   }
 )
 
-#' @rdname scores
+#' @rdname model_likelihoods
 setMethod(
   "scores", signature(object = "diseq_directional"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -calculate_system_scores(object@system)
+    calculate_system_scores(object@system)
   }
 )
 
@@ -148,7 +151,7 @@ setMethod(
   function(object) {
     demand <- stats::lm(
       object@system@demand@dependent_vector ~
-      object@system@demand@independent_matrix - 1,
+        object@system@demand@independent_matrix - 1,
       subset = object@system@demand@separation_subset
     )
     names(demand$coefficients) <- colnames(
@@ -159,7 +162,7 @@ setMethod(
 
     supply <- stats::lm(
       object@system@supply@dependent_vector ~
-      object@system@supply@independent_matrix - 1,
+        object@system@supply@independent_matrix - 1,
       subset = object@system@supply@separation_subset
     )
     names(supply$coefficients) <- colnames(

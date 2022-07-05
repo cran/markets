@@ -2,9 +2,12 @@
 % Please edit documentation in R/market_fit.R
 \name{coef,market_fit-method}
 \alias{coef,market_fit-method}
+\alias{coefficients,market_fit-method}
 \title{Estimated coefficients of a fitted market model.}
 \usage{
 \S4method{coef}{market_fit}(object)
+
+\S4method{coefficients}{market_fit}(object)
 }
 \arguments{
 \item{object}{A fitted model object.}
@@ -15,6 +18,11 @@ A vector of estimated model coefficients.
 \description{
 Returns the coefficients of the fitted model.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{market_fit}: Estimated coefficients alias.
+}}
+
 \examples{
 \donttest{
 # estimate a model using the houses dataset
@@ -29,5 +37,6 @@ fit <- diseq_deterministic_adjustment(
 
 # access the estimated coefficients
 coef(fit)
+coefficients(fit)
 }
 }

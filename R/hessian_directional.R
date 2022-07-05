@@ -1,6 +1,6 @@
 #' @include diseq_directional.R
 
-#' @rdname hessian
+#' @rdname model_likelihoods
 setMethod("hessian", signature(object = "diseq_directional"),
           function(object, parameters) {
   object@system <- set_parameters(object@system, parameters)
@@ -84,5 +84,5 @@ setMethod("hessian", signature(object = "diseq_directional"),
   rownames(Dl) <- likelihood_variables(object)
   colnames(Dl) <- likelihood_variables(object)
 
-  -Dl
+  Dl
 })

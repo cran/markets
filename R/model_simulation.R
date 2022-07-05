@@ -1,5 +1,4 @@
 #' @importFrom rlang .data
-#' @importFrom tidyr crossing
 
 setClass(
   "simulated_model",
@@ -30,7 +29,7 @@ setClass(
     seed = "numeric",
     price_generator = "function",
     control_generator = "function",
-    simulation_tbl = "tbl_df"
+    simulation_data = "data.frame"
   )
 )
 
@@ -79,8 +78,9 @@ setMethod(
     .Object@price_generator <- price_generator
     .Object@control_generator <- control_generator
 
-    .Object@simulation_tbl <- tibble::tibble(id = 1:.Object@nobs) %>%
-      tidyr::crossing(tibble::tibble(date = as.factor(1:.Object@tobs)))
+    .Object@simulation_data <- expand.grid(
+      date = as.factor(1:.Object@tobs), id = 1:.Object@nobs
+    )
 
     .Object <- simulate_controls(.Object)
     .Object <- simulate_shocks(.Object)
@@ -95,7 +95,7 @@ setGeneric("demand_controls", function(object) {
 })
 
 setMethod("demand_controls", signature(object = "simulated_model"), function(object) {
-  as.matrix(object@simulation_tbl[, grep("Xd", names(object@simulation_tbl))])
+  as.matrix(object@simulation_data[, grep("Xd", names(object@simulation_data))])
 })
 
 setGeneric("supply_controls", function(object) {
@@ -103,7 +103,7 @@ setGeneric("supply_controls", function(object) {
 })
 
 setMethod("supply_controls", signature(object = "simulated_model"), function(object) {
-  as.matrix(object@simulation_tbl[, grep("Xs", names(object@simulation_tbl))])
+  as.matrix(object@simulation_data[, grep("Xs", names(object@simulation_data))])
 })
 
 setGeneric("common_controls", function(object) {
@@ -111,7 +111,7 @@ setGeneric("common_controls", function(object) {
 })
 
 setMethod("common_controls", signature(object = "simulated_model"), function(object) {
-  as.matrix(object@simulation_tbl[, grep("X\\d", names(object@simulation_tbl))])
+  as.matrix(object@simulation_data[, grep("X\\d", names(object@simulation_data))])
 })
 
 setGeneric("simulated_demanded_quantities", function(object, prices) {
@@ -125,7 +125,7 @@ setMethod(
       prices * object@alpha_d +
         object@beta_d0 + demand_controls(object) %*% object@beta_d +
         common_controls(object) %*% object@eta_d +
-        object@simulation_tbl$u_d
+        object@simulation_data$u_d
     )
   }
 )
@@ -141,7 +141,7 @@ setMethod(
       prices * object@alpha_s +
         object@beta_s0 + supply_controls(object) %*% object@beta_s +
         common_controls(object) %*% object@eta_s +
-        object@simulation_tbl$u_s
+        object@simulation_data$u_s
     )
   }
 )
@@ -167,11 +167,11 @@ setMethod(
   function(object, coefficients, prefix, generator) {
     clen <- length(coefficients)
     if (clen > 0) {
-      simn <- nrow(object@simulation_tbl)
+      simn <- nrow(object@simulation_data)
       mat <- matrix(generator(simn * clen), simn, clen)
       colnames(mat) <- paste0(prefix, 1:clen)
-      object@simulation_tbl <- object@simulation_tbl %>%
-        dplyr::bind_cols(dplyr::as_tibble(mat))
+      object@simulation_data <- object@simulation_data |>
+        dplyr::bind_cols(as.data.frame(mat))
     }
 
     object
@@ -190,10 +190,10 @@ setMethod("simulate_shocks", signature(object = "simulated_model"), function(obj
     2, 2
   )
 
-  disturbances <- MASS::mvrnorm(n = nrow(object@simulation_tbl), object@mu, object@sigma)
+  disturbances <- MASS::mvrnorm(n = nrow(object@simulation_data), object@mu, object@sigma)
   colnames(disturbances) <- c("u_d", "u_s")
-  object@simulation_tbl <- object@simulation_tbl %>%
-    dplyr::bind_cols(dplyr::as_tibble(disturbances))
+  object@simulation_data <- object@simulation_data |>
+    dplyr::bind_cols(as.data.frame(disturbances))
 
   object
 })
@@ -224,18 +224,19 @@ setMethod(
       )
     }
 
-    object@simulation_tbl <- object@simulation_tbl %>%
-      dplyr::mutate(D = demanded_quantities) %>%
-      dplyr::mutate(S = supplied_quantities) %>%
-      dplyr::mutate(P = prices) %>%
-      dplyr::mutate(Q = pmin(.data$D, .data$S)) %>%
-      dplyr::group_by(id) %>%
-      dplyr::mutate(LP = dplyr::lag(.data$P, order_by = date)) %>%
+    object@simulation_data <- object@simulation_data |>
+      dplyr::mutate(D = demanded_quantities) |>
+      dplyr::mutate(S = supplied_quantities) |>
+      dplyr::mutate(P = prices) |>
+      dplyr::mutate(Q = pmin(.data$D, .data$S)) |>
+      dplyr::group_by(id) |>
+      dplyr::mutate(LP = dplyr::lag(.data$P, order_by = date)) |>
       dplyr::ungroup()
-    object@simulation_tbl[is.na(object@simulation_tbl$LP), "LP"] <- starting_prices
-    object@simulation_tbl <- object@simulation_tbl %>%
-      dplyr::mutate(DP = .data$P - .data$LP) %>%
-      dplyr::mutate(XD = .data$D - .data$S)
+    object@simulation_data[is.na(object@simulation_data$LP), "LP"] <- starting_prices
+    object@simulation_data <- object@simulation_data |>
+      dplyr::mutate(DP = .data$P - .data$LP) |>
+      dplyr::mutate(XD = .data$D - .data$S) |>
+      as.data.frame()
 
     object
   }
@@ -260,7 +261,7 @@ setMethod(
       (x %*% (object@eta_s - object@eta_d) +
         x_s %*% object@beta_s - x_d %*% object@beta_d +
         object@beta_s0 - object@beta_d0 +
-        object@simulation_tbl$u_s - object@simulation_tbl$u_d
+        object@simulation_data$u_s - object@simulation_data$u_d
       ) / scale
     )
     demanded_quantities <- simulated_demanded_quantities(object, prices)
@@ -282,7 +283,7 @@ setClass(
 setMethod(
   "simulate_quantities_and_prices", signature(object = "simulated_basic_model"),
   function(object, demanded_quantities, supplied_quantities, prices, starting_prices) {
-    prices <- object@price_generator(nrow(object@simulation_tbl))
+    prices <- object@price_generator(nrow(object@simulation_data))
     demanded_quantities <- simulated_demanded_quantities(object, prices)
     supplied_quantities <- simulated_supplied_quantities(object, prices)
 
@@ -343,7 +344,7 @@ setMethod(
     if (is(object, "simulated_stochastic_adjustment_model")) {
       dr <- dr + object@gamma * (
         object@beta_p0 + price_controls(object) %*% object@beta_p +
-          object@simulation_tbl$u_p
+          object@simulation_data$u_p
       )
     }
 
@@ -460,7 +461,7 @@ setGeneric("price_controls", function(object) {
 setMethod(
   "price_controls", signature(object = "simulated_stochastic_adjustment_model"),
   function(object) {
-    as.matrix(object@simulation_tbl[, grep("Xp", names(object@simulation_tbl))])
+    as.matrix(object@simulation_data[, grep("Xp", names(object@simulation_data))])
   }
 )
 
@@ -489,13 +490,13 @@ setMethod(
     ), 3, 3)
 
     disturbances <- MASS::mvrnorm(
-      n = nrow(object@simulation_tbl),
+      n = nrow(object@simulation_data),
       object@mu, object@sigma
     )
     colnames(disturbances) <- c("u_d", "u_s", "u_p")
 
-    object@simulation_tbl <- object@simulation_tbl %>%
-      dplyr::bind_cols(dplyr::as_tibble(disturbances))
+    object@simulation_data <- object@simulation_data |>
+      dplyr::bind_cols(as.data.frame(disturbances))
 
     object
   }
@@ -513,7 +514,7 @@ NULL
 #' @describeIn market_simulation Simulate model data.
 #' @description
 #' \subsection{\code{simulate_data}}{
-#' Returns a data \code{tibble} with simulated data from a generating process that
+#' Returns a data frame with simulated data from a generating process that
 #' matches the passed model string. By default, the simulated observations of the
 #' controls are drawn from a normal distribution.
 #' }
@@ -583,7 +584,7 @@ setMethod(
         sigma_d, sigma_s, rho_ds,
         seed, price_generator, control_generator
       )
-      if (any(abs(sim_mdl@simulation_tbl$XD) > sqrt(.Machine$double.eps))) {
+      if (any(abs(sim_mdl@simulation_data$XD) > sqrt(.Machine$double.eps))) {
         print_error(
           sim_mdl@logger,
           "Failed to simulate equal demanded and supplied quantities."
@@ -608,7 +609,7 @@ setMethod(
           sigma_d, sigma_s, rho_ds,
           seed, price_generator, control_generator
         )
-        if (any(sim_mdl@simulation_tbl$DP * sim_mdl@simulation_tbl$XD < 0)) {
+        if (any(sim_mdl@simulation_data$DP * sim_mdl@simulation_data$XD < 0)) {
           print_error(
             sim_mdl@logger,
             "Failed to simulate a compatible sample with the models' ",
@@ -626,8 +627,8 @@ setMethod(
           seed, price_generator, control_generator
         )
         if (any(
-          abs(sim_mdl@gamma * sim_mdl@simulation_tbl$DP -
-            sim_mdl@simulation_tbl$XD) > sqrt(.Machine$double.eps)
+          abs(sim_mdl@gamma * sim_mdl@simulation_data$DP -
+            sim_mdl@simulation_data$XD) > sqrt(.Machine$double.eps)
         )) {
           print_error(
             sim_mdl@logger,
@@ -649,7 +650,7 @@ setMethod(
         logger <- new("model_logger", verbose)
         print_error(logger, "Unhandled model type. ")
       }
-      xd_share <- sum(sim_mdl@simulation_tbl$XD > 0) / nrow(sim_mdl@simulation_tbl)
+      xd_share <- sum(sim_mdl@simulation_data$XD > 0) / nrow(sim_mdl@simulation_data)
       if (any(xd_share > 0.9 | xd_share < 0.1)) {
         print_error(
           sim_mdl@logger,
@@ -665,7 +666,7 @@ setMethod(
       )
     }
 
-    sim_mdl@simulation_tbl
+    sim_mdl@simulation_data
   }
 )
 
@@ -673,7 +674,7 @@ setMethod(
 #' @describeIn market_simulation Simulate model.
 #' @description
 #' \subsection{\code{simulate_model}}{
-#' Simulates a data \code{tibble} based on the generating process of the passed model
+#' Simulates a data frame based on the generating process of the passed model
 #' and uses it to initialize a model object. Data are simulated using the
 #' \code{\link{simulate_data}} function.
 #' }
@@ -684,12 +685,13 @@ setMethod(
 #' \code{\link{simulate_data}} function for details.
 #' @param seed Pseudo random number generator seed.
 #' @param verbose Verbosity level.
-#' @param ... Additional parameters to be passed to the model's constructor.
+#' @param correlated_shocks Should the model be estimated using correlated shocks?
 #' @return \strong{\code{simulate_model}:} The simulated model.
 #' @export
 setGeneric(
   "simulate_model",
-  function(model_type_string, simulation_parameters, seed = NA, verbose = 0, ...) {
+  function(model_type_string, simulation_parameters, seed = NA, verbose = 0,
+           correlated_shocks = TRUE) {
     standardGeneric("simulate_model")
   }
 )
@@ -698,13 +700,16 @@ setGeneric(
 #' @rdname market_simulation
 setMethod(
   "simulate_model", signature(),
-  function(model_type_string, simulation_parameters, seed, verbose, ...) {
+  function(model_type_string, simulation_parameters, seed, verbose,
+           correlated_shocks) {
     sdt <- do.call(simulate_data, c(
       model_type_string = model_type_string,
       simulation_parameters, seed = seed,
       verbose = verbose
     ))
 
+    subject <- "id"
+    time <- "date"
     quantity <- "Q"
     price <- "P"
     demand <- paste(
@@ -717,7 +722,6 @@ setMethod(
       ),
       sep = " + "
     )
-    demand <- str2lang(demand)
     supply <- paste(
       paste("Xs", seq_along(simulation_parameters$beta_s), sep = "", collapse = " + "),
       paste("X", seq_along(simulation_parameters$eta_s), sep = "", collapse = " + "),
@@ -726,52 +730,25 @@ setMethod(
     if (model_type_string != "diseq_directional") {
       supply <- paste0(price, " + ", supply)
     }
-    supply <- str2lang(supply)
-    price_dynamics <- paste("Xp",
-      seq_along(simulation_parameters$beta_p),
-      sep = "", collapse = " + "
-    )
-    # Use this avoid cran-check complains about undefined global variables
-    price_dynamics <- str2lang(price_dynamics)
-    quantity <- str2lang(quantity)
-    price <- str2lang(price)
-    subject <- str2lang("id")
-    time <- str2lang("date")
 
-    if (model_type_string %in% c("equilibrium_model", "diseq_basic")) {
-      model <- new(
-        model_type_string,
-        subject = subject, time = time,
-        quantity = quantity, price = price,
-        demand = demand, supply = supply,
-        data = sdt, verbose = verbose, ...
+    specification <- paste0(
+      paste(quantity, price, subject, time, sep = " | "), " ~ ",
+      paste(demand, supply, sep = " | ")
+    )
+
+    if (model_type_string == "diseq_stochastic_adjustment") {
+      price_dynamics <- paste("Xp",
+        seq_along(simulation_parameters$beta_p),
+        sep = "", collapse = " + "
       )
-    } else if (model_type_string %in% c(
-      "diseq_directional",
-      "diseq_deterministic_adjustment"
-    )) {
-      model <- new(
-        model_type_string,
-        subject = subject, time = time,
-        quantity = quantity, price = price,
-        demand = demand,
-        supply = supply,
-        data = sdt, verbose = verbose, ...
-      )
-    } else if (model_type_string %in% c("diseq_stochastic_adjustment")) {
-      model <- new(
-        model_type_string,
-        subject = subject, time = time,
-        quantity = quantity, price = price,
-        demand = demand, supply = supply,
-        price_dynamics = price_dynamics,
-        data = sdt, verbose = verbose, ...
-      )
-    } else {
-      logger <- new("model_logger", verbose)
-      print_error(logger, "Unhandled model type. ")
+
+      specification <- paste(specification, price_dynamics, sep = " | ")
     }
 
-    model
+    initialize_from_formula(
+      model_type = model_type_string,
+      specification = formula(specification),
+      data = sdt, verbose = verbose, correlated_shocks = correlated_shocks
+    )
   }
 )

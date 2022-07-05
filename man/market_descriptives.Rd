@@ -6,7 +6,7 @@
 \alias{supply_descriptives}
 \alias{demand_descriptives,market_model-method}
 \alias{supply_descriptives,market_model-method}
-\title{Market side descriptive statistics}
+\title{Market force data descriptive statistics}
 \usage{
 demand_descriptives(object)
 
@@ -20,10 +20,10 @@ supply_descriptives(object)
 \item{object}{A model object.}
 }
 \value{
-A data \code{tibble} containing descriptive statistics.
+A data frame containing descriptive statistics.
 }
 \description{
-Market side descriptive statistics
+Market force data descriptive statistics
 }
 \details{
 Calculates and returns basic descriptive statistics for the model's demand

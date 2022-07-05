@@ -22,7 +22,7 @@ setClass(
   prototype()
 )
 
-#' @describeIn initialize_market_model Basic disequilibrium model base
+#' @describeIn model_initialization Basic disequilibrium model base
 #' constructor
 #' @examples
 #' simulated_data <- simulate_data(
@@ -47,7 +47,8 @@ setMethod(
            quantity, price, demand, supply, subject, time,
            data, correlated_shocks = TRUE, verbose = 0) {
     specification <- make_specification(
-      data, quantity, price, demand, supply, subject, time
+      substitute(quantity), substitute(price),
+      substitute(demand), substitute(supply), substitute(subject), substitute(time)
     )
     .Object <- callNextMethod(
       .Object,
@@ -77,32 +78,32 @@ setMethod(
   "diseq_basic", signature(specification = "formula"),
   function(specification, data, correlated_shocks, verbose,
            estimation_options) {
-    initialize_from_formula(
+    initialize_and_estimate(
       "diseq_basic", specification, data, correlated_shocks, verbose,
       estimation_options
     )
   }
 )
 
-#' @rdname minus_log_likelihood
+#' @rdname model_likelihoods
 setMethod(
-  "minus_log_likelihood", signature(object = "diseq_basic"),
+  "log_likelihood", signature(object = "diseq_basic"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -sum(log(object@system@lh))
+    sum(log(object@system@lh))
   }
 )
 
-#' @rdname gradient
+#' @rdname model_likelihoods
 setMethod("gradient", signature(object = "diseq_basic"), function(object, parameters) {
   object@system <- set_parameters(object@system, parameters)
-  -colSums(calculate_system_scores(object@system))
+  colSums(calculate_system_scores(object@system))
 })
 
-#' @rdname scores
+#' @rdname model_likelihoods
 setMethod("scores", signature(object = "diseq_basic"), function(object, parameters) {
   object@system <- set_parameters(object@system, parameters)
-  -calculate_system_scores(object@system)
+  calculate_system_scores(object@system)
 })
 
 setMethod(

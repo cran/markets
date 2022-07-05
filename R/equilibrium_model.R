@@ -1,5 +1,4 @@
 #' @include market_model.R
-#' @importFrom systemfit systemfit
 
 #' @describeIn market_models Equilibrium model
 #'
@@ -27,7 +26,7 @@ setClass(
   representation()
 )
 
-#' @describeIn initialize_market_model Equilibrium model constructor
+#' @describeIn model_initialization Equilibrium model constructor
 #' @examples
 #' simulated_data <- simulate_data(
 #'   "equilibrium_model", 500, 3, # model type, observed entities and time points
@@ -51,7 +50,8 @@ setMethod(
            quantity, price, demand, supply, subject, time,
            data, correlated_shocks = TRUE, verbose = 0) {
     specification <- make_specification(
-      data, quantity, price, demand, supply, subject, time
+      substitute(quantity), substitute(price),
+      substitute(demand), substitute(supply), substitute(subject), substitute(time)
     )
     .Object <- callNextMethod(
       .Object,
@@ -61,7 +61,7 @@ setMethod(
       data,
       function(...) new("system_equilibrium", ...)
     )
-    .Object@market_type_string <- "Equilibrium"
+    .Object@market_type <- "Equilibrium"
 
     .Object
   }
@@ -83,40 +83,40 @@ setMethod(
   "equilibrium_model", signature(specification = "formula"),
   function(specification, data, correlated_shocks, verbose,
            estimation_options) {
-    initialize_from_formula(
+    initialize_and_estimate(
       "equilibrium_model", specification, data, correlated_shocks, verbose,
       estimation_options
     )
   }
 )
 
-#' @rdname minus_log_likelihood
+#' @rdname model_likelihoods
 setMethod(
-  "minus_log_likelihood", signature(object = "equilibrium_model"),
+  "log_likelihood", signature(object = "equilibrium_model"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -sum(object@system@llh)
+    sum(object@system@llh)
   }
 )
 
 
-#' @rdname gradient
+#' @rdname model_likelihoods
 setMethod(
   "gradient", signature(object = "equilibrium_model"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
     g <- colSums(calculate_system_scores(object@system))
 
-    as.matrix(-g)
+    as.matrix(g)
   }
 )
 
-#' @rdname scores
+#' @rdname model_likelihoods
 setMethod(
   "scores", signature(object = "equilibrium_model"),
   function(object, parameters) {
     object@system <- set_parameters(object@system, parameters)
-    -calculate_system_scores(object@system)
+    calculate_system_scores(object@system)
   }
 )
 

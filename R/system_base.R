@@ -4,6 +4,7 @@
 #'
 #' @details Classes with data and functionality describing systems of models.
 #' @name system_classes
+#' @keywords internal
 NULL
 
 #' @describeIn system_classes System base class
@@ -57,8 +58,8 @@ setMethod(
     .Object@correlated_shocks <- correlated_shocks
     .Object@sample_separation <- FALSE
 
-    .Object@quantity_vector <- as.matrix(model.part(specification, data, lhs = 1))
-    .Object@price_vector <- as.matrix(model.part(specification, data, lhs = 2))
+    .Object@quantity_vector <- as.matrix(model.frame(specification, data, lhs = 1, rhs = 0))
+    .Object@price_vector <- as.matrix(model.frame(specification, data, lhs = 2, rhs = 0))
 
     .Object
   }
@@ -84,9 +85,21 @@ setMethod("summary_implementation", signature(object = "system_base"), function(
   } else {
     sample_separation_output <- "Not Separated"
   }
-  cat(sprintf("  %-18s: %s\n", "Sample Separation", sample_separation_output))
-  cat(sprintf("  %-18s: %s\n", "Quantity Var", colnames(object@quantity_vector)))
-  cat(sprintf("  %-18s: %s\n", "Price Var", colnames(object@price_vector)))
+  cat(
+    labels = sprintf("  %-18s:", "Sample Separation"),
+    sample_separation_output,
+    sep = "", fill = TRUE
+  )
+  cat(
+    labels = sprintf("  %-18s:", "Quantity Var"),
+    colnames(object@quantity_vector),
+    sep = "", fill = TRUE
+  )
+  cat(
+    labels = sprintf("  %-18s:", "Price Var"),
+    colnames(object@price_vector),
+    sep = "", fill = TRUE
+  )
 })
 
 #' @describeIn variable_names Lagged price variable name.

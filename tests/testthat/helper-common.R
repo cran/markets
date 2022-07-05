@@ -1,7 +1,7 @@
 test_calculated_gradient <- function(mdl, params, tolerance) {
   cg <- as.matrix(markets:::gradient(mdl, params))
   ng <- as.matrix(numDeriv::grad(
-    function(p) minus_log_likelihood(mdl, p), params,
+    function(p) log_likelihood(mdl, p), params,
     method = "Richardson"
   ))
   rownames(ng) <- rownames(cg)
@@ -29,7 +29,7 @@ test_calculated_gradient <- function(mdl, params, tolerance) {
 
 test_convergence <- function(est) {
   testthat::expect(
-    est@fit[[1]]@details$convergence == 0,
+    est@fit$convergence == 0,
     sprintf("Failed to converge")
   )
 }
@@ -96,7 +96,7 @@ test_shortages <- function(shortage_function, est) {
 test_scores <- function(est) {
   scores <- scores(fit = est)
   n <- markets::nobs(est)
-  k <- length(markets:::likelihood_variables(est@system))
+  k <- length(markets:::likelihood_variables(est@model@system))
   testthat::expect(any(dim(scores) == c(n, k)), sprintf("Score has wrong dimensions"))
   testthat::expect(
     !any(is.na(scores)),
@@ -107,7 +107,9 @@ test_scores <- function(est) {
 test_coef <- function(est) {
   testthat::expect(
     class(coef(est)) == "numeric" &
-      length(coef(est)) == length(likelihood_variables(est@system)),
+      class(coefficients(est)) == "numeric" &
+      length(coef(est)) == length(likelihood_variables(est@model@system)) &
+      length(coefficients(est)) == length(likelihood_variables(est@model@system)),
     sprintf("Failed to access coefficients via coef")
   )
 }
@@ -116,7 +118,7 @@ test_vcov <- function(est) {
   vc <- vcov(est)
   testthat::expect(
     class(vc)[1] == "matrix" &
-      all(dim(vc) == rep(length(likelihood_variables(est@system)), 2)),
+      all(dim(vc) == rep(length(likelihood_variables(est@model@system)), 2)),
     sprintf("Failed to access variance-covariance matrix via vcov")
   )
 }
@@ -160,15 +162,15 @@ load_or_simulate_data <- function(model_string, parameters) {
   if (file.exists("devel-environment") & file.exists(stored_data_filename)) {
     load(stored_data_filename)
   } else {
-    model_tibble <- do.call(
+    data <- do.call(
       markets::simulate_data,
       c(model_string, parameters, verbose = verbose, seed = seed)
     )
     if (file.exists("devel-environment")) {
-      save(model_tibble, file = stored_data_filename)
+      save(data, file = stored_data_filename)
     }
   }
-  model_tibble
+  data
 }
 
 load_or_simulate_model <- function(model_string, parameters) {
