@@ -8,7 +8,7 @@
 \alias{aggregate_supply,missing,market_model,ANY-method}
 \alias{aggregate_demand,market_fit,missing,missing-method}
 \alias{aggregate_supply,market_fit,missing,missing-method}
-\title{Market side aggregation.}
+\title{Market side aggregation}
 \usage{
 aggregate_demand(fit, model, parameters)
 
@@ -34,16 +34,16 @@ The sum of the estimated demanded or supplied quantities evaluated at the
 given parameters.
 }
 \description{
-Market side aggregation.
+Market side aggregation
 }
 \details{
 Calculates the sample's aggregate demand or supply using the
 estimated coefficients of a fitted model. Alternatively, the function
 calculates aggregates using a model and a set of parameters passed
 separately. If the model's data have multiple distinct subjects at each
-date, aggregation is calculated over subjects per unique date. If the model
-has time series data, namely a single subject per time point, aggregation
-is ululated over all time pints.
+date (e.g., panel data), aggregation is calculated over subjects per unique date.
+If the model has time series data, namely a single subject per time point, aggregation
+is calculated over all time points.
 }
 \section{Functions}{
 \itemize{

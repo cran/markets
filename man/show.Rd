@@ -3,7 +3,7 @@
 \name{show,market_model-method}
 \alias{show,market_model-method}
 \alias{show,market_fit-method}
-\title{Prints a short description of the model.}
+\title{Prints a short description of the model}
 \usage{
 \S4method{show}{market_model}(object)
 
@@ -20,21 +20,18 @@ Sends basic information about the model to standard output.
 }
 \examples{
 \donttest{
-model <- simulate_model(
-  "diseq_stochastic_adjustment", list(
-    # observed entities, observed time points
-    nobs = 500, tobs = 3,
-    # demand coefficients
-    alpha_d = -0.1, beta_d0 = 9.8, beta_d = c(0.3, -0.2), eta_d = c(0.6, -0.1),
-    # supply coefficients
-    alpha_s = 0.1, beta_s0 = 7.1, beta_s = c(0.9), eta_s = c(-0.5, 0.2),
-    # price equation coefficients
-    gamma = 1.2, beta_p0 = 3.1, beta_p = c(0.8)
-  ),
-  seed = 31
+fit <- equilibrium_model(
+  HS | RM | ID | TREND ~
+    RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+      RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses(),
+  estimation_options = list(method = "2SLS")
 )
 
-# print short model information
-show(model)
+# print model information
+show(fit@model)
+
+# print fit information
+show(fit)
 }
 }

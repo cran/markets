@@ -1,3 +1,32 @@
+# markets 1.1.0
+
+* Improved figure resolution in the package's paper.
+
+# markets 1.0.12
+
+* Reorganized and extended documentation.
+
+# markets 1.0.11
+
+* Removed non exported variable name access functions from documentation.
+
+# markets 1.0.10
+
+* Removed warnings when compiling without `GSL`. 
+
+# markets 1.0.9
+
+* Adjustments to the integration of `maximize_log_likelihood` to `estimate` accommodating cases where `GSL` is unavailable. 
+
+# markets 1.0.8
+
+* Integrated functionality of `maximize_log_likelihood` to `estimate`. Equilibrium likelihoods can be optimized via `GSL` by passing the option `optimizer = gsl` to `estimate`.
+
+# markets 1.0.7
+
+* Added significance stars in summaries.
+* Fixed calculation of two stage least square correlation coefficient.
+
 # markets 1.0.6
 
 * Cumulative update of CRAN version. 

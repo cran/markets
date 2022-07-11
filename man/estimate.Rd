@@ -4,7 +4,7 @@
 \alias{estimate}
 \alias{estimate,market_model-method}
 \alias{estimate,equilibrium_model-method}
-\title{Model estimation.}
+\title{Model estimation}
 \usage{
 estimate(object, ...)
 
@@ -16,13 +16,13 @@ estimate(object, ...)
   ...
 )
 
-\S4method{estimate}{equilibrium_model}(object, method = "BFGS", ...)
+\S4method{estimate}{equilibrium_model}(object, method = "BFGS", optimizer = "optim", ...)
 }
 \arguments{
 \item{object}{A model object.}
 
 \item{...}{Additional parameter used in the model's estimation. These are
-passed further down to the estimation call. For the
+passed further down to the optimization call. For the
 \code{\linkS4class{equilibrium_model}} model, the parameters are passed to
 \code{\link[stats]{lm}}, if the method is set to
 \code{2SLS}, or to \code{\link[stats]{optim}} for any other method. For the rest of
@@ -34,7 +34,7 @@ analytic expressions of their likelihoods' gradients.}
 
 \item{hessian}{One of three potential options: \code{"skip"},
 \code{"numerical"}, and \code{"calculated"}. The default is to use the
-\code{"calculated"} Hessian for the model that expressions are
+\code{"calculated"} Hessian for the models that expressions are
 available and the \code{"numerical"} Hessian in other cases. Calculated
 Hessian expressions are available for the basic and directional models.}
 
@@ -44,20 +44,26 @@ variables names for which standard error clusters are to be created. The
 default value is \code{"homoscedastic"}. If the option
 \code{"heteroscedastic"} is passed, the variance-covariance matrix is
 calculated using heteroscedasticity adjusted (Huber-White) standard errors.
-If the vector is supplied, the variance-covariance matrix is calculated by
-grouping the score matrix based on the passed variables.}
+If a vector with variable names is supplied, the variance-covariance
+matrix is calculated by grouping the score matrix based on the
+passed variables.}
 
 \item{method}{A string specifying the estimation method. When the passed value is
-among \code{Nelder-Mead}, \code{BFGS}, \code{CG}, \code{L-BFGS-B}, \code{SANN},
-and \code{Brent}, the model is estimated using
+among \code{"Nelder-Mead"}, \code{"BFGS"}, \code{"CG"}, \code{"L-BFGS-B"},
+\code{"SANN"}, and \code{"Brent"}, the model is estimated using
 full information maximum likelihood based on \code{\link[stats]{optim}} functionality.
-When \code{2SLS} is supplied, the model is estimated using two-stage least squares
-using \code{\link[stats]{lm}}. In this case, the function returns a
+When \code{"2SLS"} is supplied, the model is estimated using two-stage least squares
+via \code{\link[stats]{lm}}. In this case, the function returns a
 list containing the first and second stage estimates. The default value is
-\code{BFGS}.}
+\code{"BFGS"}.}
+
+\item{optimizer}{One of two options:
+\code{"optim"}, \code{"gsl"}. The default value is \code{"optim"}. If the
+option \code{"gsl"} is set, the equilibrium likelihood is maximized using
+\href{https://www.gnu.org/software/gsl/doc/html/multimin.html}{\code{GSL}}.}
 }
 \value{
-The object that holds the estimation result.
+A market fit object holding the estimation result.
 }
 \description{
 All models are estimated using full information maximum likelihood. The
@@ -68,6 +74,26 @@ linear regression estimates as initializing values. The default optimization met
 BFGS. For other alternatives see \code{\link[stats]{optim}}. The implementation of
 the two-stage least square estimation of the \code{\linkS4class{equilibrium_model}}
 is based on \code{\link[stats]{lm}}.
+}
+\details{
+The likelihood of the equilibrium model can be optimized either by using \code{optim}
+(the default option) or native
+\href{https://www.gnu.org/software/gsl/doc/html/multimin.html}{\code{GSL}} routines.
+The caller can override the default behavior by setting the \code{optimizer} argument
+equal to \code{"gsl"}, in which case \code{GSL} routines are used. This does not
+necessarily result to faster execution times. This functionality is primarily
+intended for advanced usage. The \code{\link[stats]{optim}} functionality is a fast,
+analysis-oriented alternative, which is more suitable for most use case.
+
+When \code{optimizer = "gsl"} is used, the only available optimization method is BFGS.
+Additionally, the caller needs to specify in the control list values for the
+optimization step (\code{step}), the objective's optimization tolerance
+(\code{objective_tolerance}), the gradient's optimization tolerance
+(\code{gradient_tolerance}, and the maximum allowed number of iterations (\code{maxit}).
+If the \code{GSL} library is not available in the calling machine, the function
+returns a trivial result list with convergence status set equal to -1. If the
+\href{https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag_t}{C++17 execution policies}
+are available, the implementation of the optimization is parallelized.
 }
 \section{Functions}{
 \itemize{
@@ -95,6 +121,31 @@ fit <- estimate(model)
 fit <- estimate(model, control = list(maxit = 1e+6))
 
 # summarize results
+summary(fit)
+}
+\donttest{
+# simulate an equilibrium model
+model <- simulate_model(
+  "equilibrium_model", list(
+    # observed entities, observed time points
+    nobs = 500, tobs = 3,
+    # demand coefficients
+    alpha_d = -1.9, beta_d0 = 24.9, beta_d = c(2.3, -1.2), eta_d = c(2.0, -1.5),
+    # supply coefficients
+    alpha_s = .9, beta_s0 = 8.2, beta_s = c(3.3), eta_s = c(1.5, -2.2)
+  ),
+  seed = 99
+)
+
+# maximize the model's log-likelihood
+fit <- estimate(
+  model,
+  optimizer = "gsl", control = list(
+    step = 1e-2, objective_tolerance = 1e-8,
+    gradient_tolerance = 1e-2, maxit = 1e+3
+  )
+)
+
 summary(fit)
 }
 }

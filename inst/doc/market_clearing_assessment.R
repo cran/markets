@@ -73,7 +73,6 @@ da_fit <- diseq_deterministic_adjustment(
 )
 
 ## ----analysis.summaries-------------------------------------------------------
-summary(eq_reg@fit$first_stage_model)
 summary(eq_reg)
 summary(eq_fit)
 summary(bs_fit)

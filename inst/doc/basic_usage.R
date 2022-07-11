@@ -9,17 +9,17 @@ library(Formula)
 
 ## ----setup.data---------------------------------------------------------------
 nobs <- 1000
-tobs <- 10
+tobs <- 5
 
-alpha_d <- -0.3
-beta_d0 <- 6.8
-beta_d <- c(0.3, -0.02)
-eta_d <- c(0.6, -0.1)
+alpha_d <- -1.3
+beta_d0 <- 24.8
+beta_d <- c(2.3, -1.02)
+eta_d <- c(2.6, -1.1)
 
 alpha_s <- 0.6
-beta_s0 <- 4.1
-beta_s <- c(0.9)
-eta_s <- c(-0.5, 0.2)
+beta_s0 <- 16.1
+beta_s <- c(2.9)
+eta_s <- c(-1.5, 3.2)
 
 gamma <- 1.2
 beta_p0 <- 0.9
@@ -79,7 +79,6 @@ sa_fit <- diseq_stochastic_adjustment(
 )
 
 ## ----analysis.summaries-------------------------------------------------------
-summary(eq_reg@fit$first_stage_model)
 summary(eq_reg)
 summary(eq_fit)
 summary(bs_fit)
@@ -189,7 +188,6 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
       legend.position = c(0.8, 0.5)
     )
 } else {
-
     aggregates
 }
 

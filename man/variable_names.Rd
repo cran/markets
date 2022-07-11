@@ -108,3 +108,4 @@ constructed by concatenating the price variable name with \code{DIFF}.
 \item \code{price_differences_variable}: Price differences variable name.
 }}
 
+\keyword{internal}

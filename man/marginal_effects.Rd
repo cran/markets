@@ -46,7 +46,11 @@ default) and "at_the_mean".}
 The estimated effect of the passed variable.
 }
 \description{
-Returns the estimated effect of a variable.
+Returns the estimated effect of a variable. The effect accounts for both sides
+of the market. If the given variable belongs only to the demand side, the name of
+result is prefixed by \code{"D_"}. If the given variable belongs only to the supply
+side, the name of result is prefixed by \code{"S_"}. If the variable can be found
+both sides, the result name is prefixed by \code{"B_"}.
 }
 \section{Functions}{
 \itemize{
@@ -62,10 +66,10 @@ given by
 \item \code{shortage_probability_marginal}: Marginal effect on shortage probabilities
 
 Returns the estimated marginal effect of a variable on the probability of
-observing a shortage state. The mean marginal effect on the shortage probability
-is given by
-\deqn{M_{x} \mathrm{E} \phi\left(\frac{D - S}{\sqrt{\sigma_{d}^2 + \sigma_{s}^2 - 2 rho \sigma_{d} \sigma_{s}}}\right)}
-and the marginal effect at the mean by
+observing a shortage state. The mean marginal effect (\code{aggregate = "mean"}) on
+the shortage probability is given by
+\deqn{M_{x} \mathrm{E} \phi\left(\frac{D - S}{\sqrt{\sigma_{d}^2 + \sigma_{s}^2 - 2 rho \sigma_{d} \sigma_{s}}}\right)}.
+and the marginal effect at the mean (\code{aggregate = "at_the_mean"}) by
 \deqn{M_{x} \phi\left(\mathrm{E}\frac{D - S}{\sqrt{\sigma_{d}^2 + \sigma_{s}^2 - 2 rho \sigma_{d} \sigma_{s}}}\right)}
 where \eqn{M_{x}} is the marginal effect on the system, \eqn{D} is the demanded
 quantity, \eqn{S} the supplied quantity, and \eqn{\phi} is the standard normal

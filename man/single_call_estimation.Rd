@@ -121,12 +121,19 @@ The functions of this section combine model initialization and estimation
 into a single call. They also provide a less verbose interface to the
 functionality of the package. The functions expect a formula following the
 specification described in \link[=market_model_formula]{formula}, a
-dataset, and optionally further initialization (see
-\link[=model_initialization]{model initialization}) and
-estimation (see \link[=estimate]{model estimation}) options.
+dataset, and optionally further initialization and
+estimation options (see \link[=model_initialization]{model initialization}
+and \link[=estimate]{model estimation} respectively).
 
-Each of these functions parses the passed formula, initializes the model
-specified by the function's name, fit the model to the passed data using
+Estimation options are expected to be given in the argument
+\code{estimation_options} in a form of a \code{\link{list}}. The list
+names should correspond to variables of the \code{\link{estimate}}
+function. As a result, optimization options, which are customized using
+the \code{control} argument of \code{\link{estimate}} can be passed
+as an element of \code{estimation_options}.
+
+Each of these functions parses the given formula, initializes the model
+specified by the function's name, fits the model to the given data using
 the estimation options and returns fitted model.
 }
 \section{Functions}{
@@ -144,3 +151,56 @@ price adjustments.
 \item \code{equilibrium_model}: Equilibrium model
 }}
 
+\examples{
+\donttest{
+# An example of estimating the equilibrium model
+eq <- equilibrium_model(
+  HS | RM | ID | TREND ~ RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+    RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses(), estimation_options = list(control = list(maxit = 5000))
+)
+
+# An example of estimating the deterministic adjustment model
+da <- diseq_deterministic_adjustment(
+  HS | RM | ID | TREND ~ RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+    RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses(),
+  verbose = 2,
+  estimation_options = list(control = list(maxit = 5000))
+)
+
+# An example of estimating the directional model
+dr <- diseq_directional(
+  HS | RM | ID | TREND ~ TREND + W + CSHS + L1RM + L2RM |
+    RM + TREND + W + MA6DSF + MA3DHF + MONTH,
+  fair_houses(), estimation_options = list(
+    method = "Nelder-Mead", control = list(maxit = 5000)
+  )
+)
+
+# An example of estimating the basic model
+start <- coef(eq)
+start <- start[names(start) != "RHO"]
+bs <- diseq_basic(
+  HS | RM | ID | TREND ~ RM + TREND + W + CSHS + L1RM + L2RM + MONTH |
+    RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses(), verbose = 2, correlated_shocks = FALSE,
+  estimation_options = list(
+    start = start,
+    control = list(maxit = 5000)
+  )
+)
+
+# An example of estimating the stochastic adjustment model
+sa <- diseq_stochastic_adjustment(
+  HS | RM | ID | TREND ~ RM + TREND + W + CSHS + MONTH |
+    RM + TREND + W + L1RM + L2RM + MA6DSF + MA3DHF + MONTH |
+    TREND + L2RM + L3RM,
+  fair_houses() |> dplyr::mutate(L3RM = dplyr::lag(RM, 3)),
+  correlated_shocks = FALSE,
+  estimation_options = list(
+    control = list(maxit = 5000), standard_errors = c("W")
+  )
+)
+}
+}

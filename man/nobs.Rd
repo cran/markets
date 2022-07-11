@@ -3,7 +3,7 @@
 \name{nobs,market_model-method}
 \alias{nobs,market_model-method}
 \alias{nobs,market_fit-method}
-\title{Number of observations.}
+\title{Number of observations}
 \usage{
 \S4method{nobs}{market_model}(object)
 
@@ -16,7 +16,21 @@
 The number of used observations.
 }
 \description{
-Returns the number of observations that are used by an initialized model. The number
-of used observations may differ from the numbers of observations of the data set
-that was passed to the model's initialization.
+Returns the number of observations that are used by an initialized model. If there
+are missing values, the number of used observations may differ from the numbers
+of observations of the data set that was passed to the model's initialization.
+}
+\examples{
+\donttest{
+model <- new(
+  "diseq_basic", # model type
+  subject = ID, time = TREND, quantity = HS, price = RM,
+  demand = RM + TREND + W + CSHS + L1RM + L2RM + MONTH,
+  supply = RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
+  fair_houses()
+)
+
+# get the number observations
+nobs(model)
+}
 }

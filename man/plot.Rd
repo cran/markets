@@ -2,9 +2,9 @@
 % Please edit documentation in R/market_fit.R
 \name{plot,market_fit-method}
 \alias{plot,market_fit-method}
-\title{Plots the fitted model.}
+\title{Plots the fitted model}
 \usage{
-\S4method{plot}{market_fit}(x, subject, time, ...)
+\S4method{plot}{market_fit}(x, subject, time, show_scatter = TRUE, ...)
 }
 \arguments{
 \item{x}{A model object.}
@@ -14,7 +14,10 @@ visualization.}
 
 \item{time}{A vector of time identifiers to be used in the visualization.}
 
-\item{...}{Additional parameter to be used for styling the figure.
+\item{show_scatter}{Should the price-quantity scatter be plotted? By default
+\code{TRUE}.}
+
+\item{...}{Additional parameters to be used for styling the figure.
 Specifically \code{xlab}, \code{ylab}, and \code{main} are currently
 handled by the function.}
 }
@@ -28,6 +31,12 @@ corresponding to the given subject and time identifiers. Then, it plots
 the average fitted demand and supply quantities for the same data subset
 letting prices vary between the minimum and maximum price
 points observed in the data subset.
+}
+\details{
+If the \code{subject} argument is missing, all subjects are used. If the
+\code{time} argument is missing, all time points are used. The scatter
+plot of the quantity-price data can be suppressed by setting
+\code{show_scatter = FALSE}.
 }
 \examples{
 \donttest{

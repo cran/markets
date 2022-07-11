@@ -3,7 +3,7 @@
 \name{logLik.market_fit}
 \alias{logLik.market_fit}
 \alias{logLik,market_fit-method}
-\title{Log likelihood of a fitted market model.}
+\title{Log likelihood of a fitted market model}
 \usage{
 \method{logLik}{market_fit}(object, ...)
 
@@ -21,7 +21,7 @@ A \code{\link[stats]{logLik}} object.
 Specializes the \code{\link[stats]{logLik}} function for the market models
 of the package estimated with full information minimum likelihood. It
 returns \code{NULL} for the equilibrium model estimated with two stage
-least squares (\code{2SLS}).
+least squares (\code{method = "2SLS"}).
 }
 \examples{
 \donttest{

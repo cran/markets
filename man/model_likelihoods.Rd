@@ -27,7 +27,7 @@
 \alias{hessian,diseq_basic-method}
 \alias{hessian,diseq_directional-method}
 \alias{scores,missing,missing,market_fit-method}
-\title{Model likelihoods and derivatives.}
+\title{Model likelihoods and derivatives}
 \usage{
 log_likelihood(object, parameters)
 
@@ -76,41 +76,46 @@ scores(object, parameters, fit)
 \arguments{
 \item{object}{A model object.}
 
-\item{parameters}{A vector with model parameters.}
+\item{parameters}{A vector of parameters at which the function is to be evaluated.}
 
 \item{fit}{A fitted model object.}
 }
 \value{
-The sum of the likelihoods evaluated for each observation.
+\subsection{\code{log_likelihood}}{
+The sum of the likelihoods evaluated for each observation.}
 
-The log likelihood's gradient.
+\subsection{\code{gradient}}{The log likelihood's gradient.}
 
-The log likelihood's hessian.
+\subsection{\code{hessian}}{The log likelihood's hessian.}
 
-The score matrix.
+\subsection{\code{scores}}{The score matrix.}
 }
 \description{
 Methods that calculate the likelihoods, scores, gradients, and Hessians
-of market models.
+of market models. The likelihood functions are based on
+Maddala and Nelson (1974) \doi{10.2307/1914215}. The likelihoods, gradient, and
+Hessian expressions that the function uses are derived in
+Karapanagiotis (2020) \doi{10.2139/ssrn.3525622}.
 
-Returns the log-likelihood. The likelihood functions are based on
-Maddala and Nelson (1974) \doi{10.2307/1914215}. The likelihoods expressions
-that the function uses are derived in
-Karapanagiotis (2020) \doi{10.2139/ssrn.3525622}. The function calculates
-the model's log likelihood by evaluating the log likelihood of each observation in
-the sample and summing the evaluation results.
+\subsection{\code{log_likelihood}}{
+Returns the log-likelihood. The function calculates the model's log likelihood by
+evaluating the log likelihood of each observation in the sample and summing the
+evaluation results.}
 
-Returns the gradient of the log-likelihood evaluated at the passed parameters.
+\subsection{\code{gradient}}{Returns the gradient of the log-likelihood
+evaluated at the passed parameters.}
 
-Returns the hessian of the log-likelihood evaluated at the passed parameters.
+\subsection{\code{hessian}}{Returns the hessian of the log-likelihood evaluated
+at the passed parameters.}
 
+\subsection{\code{scores}}{
 It calculates the gradient of the likelihood at the given parameter point
 for each observation in the sample. It, therefore, returns an n x k matrix,
 where n denotes the number of observations in the sample and k the number
 of estimated parameters. The ordering of the parameters is the same as
 the one that is used in the summary of the results. The method can be
 called either using directly a fitted model object, or by separately
-providing a model object and a parameter vector.
+providing a model object and a parameter vector.}
 }
 \examples{
 \donttest{

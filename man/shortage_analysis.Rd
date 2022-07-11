@@ -73,14 +73,12 @@ shortage_standard_deviation(fit, model, parameters)
 A vector with the (estimated) shortages.
 }
 \description{
-Analysis of shortages
-}
-\details{
 The following methods offer functionality for analyzing estimated
 shortages of the market models. The methods can be called either
 using directly a fitted model object, or by separately providing a model
 object and a parameter vector.
-
+}
+\details{
 \subsection{shortages}{
 Returns the predicted shortages at a given point.
 }
@@ -108,7 +106,7 @@ performed using the passed parameter vector.
 }
 
 \subsection{shortage_standard_deviation}{
-Returns the variance of excess demand.
+Returns the standard deviation of excess demand.
 }
 }
 \section{Functions}{
@@ -123,7 +121,7 @@ Returns the variance of excess demand.
 
 \item \code{shortage_indicators}: Shortage indicators.
 
-\item \code{shortage_standard_deviation}: Shortage variance.
+\item \code{shortage_standard_deviation}: Shortage standard deviation.
 }}
 
 \examples{
@@ -153,7 +151,7 @@ head(shortage_indicators(fit))
 # get the estimated shortages
 head(shortages(fit))
 
-# get the estimated shortage variance
+# get the estimated shortage standard deviation
 shortage_standard_deviation(fit)
 }
 }

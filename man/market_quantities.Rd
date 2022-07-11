@@ -8,7 +8,7 @@
 \alias{supplied_quantities,missing,market_model,ANY-method}
 \alias{demanded_quantities,market_fit,missing,missing-method}
 \alias{supplied_quantities,market_fit,missing,missing-method}
-\title{Estimated market quantities.}
+\title{Estimated market quantities}
 \usage{
 demanded_quantities(fit, model, parameters)
 
@@ -30,11 +30,10 @@ supplied_quantities(fit, model, parameters)
 \item{parameters}{A vector of model's parameters.}
 }
 \value{
-A vector with the demanded quantities evaluated at the given parameter
-vector.
+A vector with the market quantities evaluated at the given parameter vector.
 }
 \description{
-Estimated market quantities.
+Estimated market quantities
 }
 \details{
 Calculates and returns the estimated demanded or supplied quantities for

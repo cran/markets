@@ -2,7 +2,7 @@
 % Please edit documentation in R/market_fit.R
 \name{vcov,market_fit-method}
 \alias{vcov,market_fit-method}
-\title{Variance-covariance matrix for a fitted market model.}
+\title{Variance-covariance matrix for a fitted market model}
 \usage{
 \S4method{vcov}{market_fit}(object)
 }

@@ -35,31 +35,31 @@ market_type(object)
 \item{object}{A model object.}
 }
 \value{
-A string representation of the model.
+\subsection{\code{name}}{The model's name.}
 
-A model description string.
+\subsection{\code{describe}}{The model's description.}
 
-A string representation of the model.
+\subsection{\code{market_type}}{The model's market type.}
 }
 \description{
-A unique identifying string for the model.
+\subsection{\code{name}}{A unique identifying string for the model.}
 
-A short (one-liner) description of the market model.
+\subsection{\code{describe}}{A short (one-liner) description of the market model.}
 
-A market type string (equilibrium or disequilibrium) for a given model.
+\subsection{\code{market_type}}{
+A market type string (equilibrium or disequilibrium) for a given model.}
 }
+\section{Functions}{
+\itemize{
+\item \code{name}: Model name
+
+\item \code{describe}: Model description
+
+\item \code{market_type}: Market type
+}}
+
 \examples{
 # initialize the equilibrium using the houses dataset
-model <- new(
-  "equilibrium_model", # model type
-  subject = ID, time = TREND, quantity = HS, price = RM,
-  demand = RM + TREND + W + CSHS + L1RM + L2RM + MONTH,
-  supply = RM + TREND + W + L1RM + MA6DSF + MA3DHF + MONTH,
-  fair_houses()
-)
-
-name(model)
-# initialize the basic model using the houses dataset
 model <- new(
   "diseq_basic", # model type
   subject = ID, time = TREND, quantity = HS, price = RM,
@@ -68,5 +68,10 @@ model <- new(
   fair_houses()
 )
 
+# model name
+name(model)
+# model description
 describe(model)
+# market type
+market_type(model)
 }

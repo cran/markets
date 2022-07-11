@@ -3,7 +3,7 @@
 \name{formula,market_model-method}
 \alias{formula,market_model-method}
 \alias{market_model_formula}
-\title{Market model formula.}
+\title{Market model formula}
 \usage{
 \S4method{formula}{market_model}(x)
 }
@@ -14,7 +14,7 @@
 The model's formula
 }
 \description{
-Market model formula.
+Market model formula
 }
 \details{
 Market model formulas adhere to the following specification:
@@ -23,12 +23,12 @@ Market model formulas adhere to the following specification:
 
 where
 \itemize{
-\item{quantity} The model's traded (observed) quantity variable.
-\item{price} The model's price variable.
-\item{quantity} The model's subject (e.g. firm) identification variable.
-\item{quantity} The model's time identification variable.
-\item{demand} The right hand side of the model's demand equation.
-\item{supply} The right hand side of the model's supply equation.
+\item{quantity:} The model's traded (observed) quantity variable.
+\item{price:} The model's price variable.
+\item{quantity:} The model's subject (e.g. firm) identification variable.
+\item{quantity:} The model's time identification variable.
+\item{demand:} The right hand side of the model's demand equation.
+\item{supply:} The right hand side of the model's supply equation.
 }
 
 The \code{\linkS4class{diseq_stochastic_adjustment}} additionally specify

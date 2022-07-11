@@ -14,9 +14,10 @@ objects to methods such as \code{\link{plot}}, \code{\link{summary}}, and
 \code{\link{logLik}}.
 }
 \details{
-The \code{market_fit} class derives from the \code{\linkS4class{market_model}}
-class. Thus, all the public functionality of the underlying market model is also
-directly accessible from the output class.
+The \code{market_fit} class composes the \code{\linkS4class{market_model}}
+class with the estimation results obtained by \code{\link[stats]{optim}},
+\code{\link[stats]{lm}} or \code{GSL}. All the public functionality of the
+underlying market model is also directly accessible from the output class.
 
 Furthermore, the class is responsible for harmonizing the heterogeneous
 outputs resulting from different estimation methods of market models. For
@@ -25,10 +26,10 @@ example, a \code{2SLS} estimation of the
 models (the first stage, demand, and supply models), while the maximum
 likelihood estimation of \code{\linkS4class{diseq_basic}} returns an
 \code{\link[stats]{optim}} list. In both cases, the \code{market_fit}
-stores the estimation output in the member \code{fit} of type \code{list}.
-Methods of the class examine the type of the \code{fit} and direct
-execution accordingly to different branches to produce
-a unified experience for the caller.
+stores the estimation output in the member \code{fit} of type \code{list}
+and produces additional harmonized list elements. Methods of the class
+examine the type of the \code{fit} and direct execution accordingly to different
+branches to produce a unified experience for the caller.
 }
 \section{Functions}{
 \itemize{
@@ -53,7 +54,7 @@ fit <- equilibrium_model(
   estimation_options = list(method = "2SLS")
 )
 
-# access an inherited method from the underlying model
+# access an method of the underlying model
 aggregate_demand(fit)
 
 # summary of results

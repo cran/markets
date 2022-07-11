@@ -1,7 +1,7 @@
 Package: markets
 Title: Estimation Methods for Markets in Equilibrium and Disequilibrium
-Version: 1.0.6
-Date: 2022-07-05
+Version: 1.1.0
+Date: 2022-07-09
 Authors@R: 
     person(given = "Pantelis",
            family = "Karapanagiotis",
@@ -56,9 +56,9 @@ Collate: 'data.R' 'equation_base.R' 'system_base.R' 'model_logger.R'
 LinkingTo: Rcpp, RcppGSL
 SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2022-07-05 20:26:44 UTC; ntelispak
+Packaged: 2022-07-09 10:02:42 UTC; ntelispak
 Author: Pantelis Karapanagiotis [aut, cre]
     (<https://orcid.org/0000-0001-9871-1908>)
 Maintainer: Pantelis Karapanagiotis <pikappa.devel@gmail.com>
 Repository: CRAN
-Date/Publication: 2022-07-05 22:30:06 UTC
+Date/Publication: 2022-07-11 08:00:02 UTC
