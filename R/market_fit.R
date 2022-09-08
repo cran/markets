@@ -461,7 +461,7 @@ setMethod(
     fitted_column <- paste0(price_variable, "_FITTED")
 
     ## estimate first stage
-    first_stage_controls <- all.vars(terms(object@system@formula, lhs = 0))
+    first_stage_controls <- attr(terms(object@system@formula, lhs = 0), "term.labels")
     first_stage_controls <- first_stage_controls[
       first_stage_controls != price_variable
     ]
@@ -475,7 +475,7 @@ setMethod(
     ## estimate demand model
     independent <- gsub(
       sprintf("\\b%s\\b", price_variable), fitted_column,
-      all.vars(terms(object@system@formula, lhs = 0, rhs = 1))
+      attr(terms(object@system@formula, lhs = 0, rhs = 1), "term.labels")
     )
     demand_formula <- formula(paste0(
       quantity_variable, " ~ ", paste0(independent, collapse = " + ")
@@ -485,7 +485,7 @@ setMethod(
     ## estimate supply model
     independent <- gsub(
       sprintf("\\b%s\\b", price_variable), fitted_column,
-      all.vars(terms(object@system@formula, lhs = 0, rhs = 2))
+      attr(terms(object@system@formula, lhs = 0, rhs = 2), "term.labels")
     )
     supply_formula <- formula(paste0(
       quantity_variable, " ~ ", paste0(independent, collapse = " + ")
@@ -549,10 +549,10 @@ setMethod(
 
     zz <- crossprod(mp)
     xx <- rbind(
-      mp %*% solve(zz, crossprod(mp, cbind(md, matrix(0, nobss, ncoefs)))),
-      mp %*% solve(zz, crossprod(mp, cbind(matrix(0, nobsd, ncoefd), ms)))
+      mp %*% MASS::ginv(zz) %*% crossprod(mp, cbind(md, matrix(0, nobss, ncoefs))),
+      mp %*% MASS::ginv(zz) %*% crossprod(mp, cbind(matrix(0, nobsd, ncoefd), ms))
     )
-    vc <- var * solve(crossprod(xx))
+    vc <- var * MASS::ginv(crossprod(xx))
     vc <- vc[c(2, 1, 3:ncoefall), ]
     vc <- vc[, c(2, 1, 3:ncoefall)]
     colnames(vc) <- names(par)[1:ncoefall]
@@ -899,12 +899,18 @@ setMethod("plot", signature(x = "market_fit"), function(
   va_args <- list(...)
   if (is.null(va_args$xlab)) {
     xlab <- colnames(x@model@system@price_vector)[1]
+  } else {
+    xlab <- va_args$xlab
   }
   if (is.null(va_args$ylab)) {
     ylab <- quantity_variable(x@model@system@demand)
+  } else {
+    ylab <- va_args$ylab
   }
   if (is.null(va_args$main)) {
     main <- x@model@model_name
+  } else {
+    main <- va_args$main
   }
   x@model@system <- set_parameters(x@model@system, coef(x))
   indices <- x@model@data |>

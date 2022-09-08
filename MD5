@@ -1,7 +1,7 @@
-1700ec4010d1332244ed0743f8c43fb7 *DESCRIPTION
+7ef26b3efe7c3f3fe8b2ca17a5ae79fe *DESCRIPTION
 cd492f9b58bc55b27835d17fefe16b9a *LICENSE
 f70124bb9a6cd34a257bbd5933c9105d *NAMESPACE
-6f4fdbe0acc5c54b76866e6f5623d02d *NEWS.md
+fec4ec0c395d840091caf56e95cd723d *NEWS.md
 60d43670935bda0dccf0131649d7b163 *R/data.R
 866fd53628723de29bfad24b8b25f7ec *R/diseq_basic.R
 9115c7f7cd5c4ac6681152b8a2957132 *R/diseq_deterministic_adjustment.R
@@ -26,7 +26,7 @@ ce529c056df5fba4bbf021f6183e63a7 *R/hessian_basic.R
 a2a3333ffa75e036122b39a8fa5ec9a3 *R/likelihood_directional.R
 518253a17c8fa1dfb7518ba2b433f5c4 *R/likelihood_equilibrium.R
 48cce7428b2048865c9e4366baa7f6a0 *R/likelihood_stochastic_adjustment.R
-8fad3df6371aa52e1c35ae21651cf6f8 *R/market_fit.R
+e5adcbaf591ddad82f0d67265b057b81 *R/market_fit.R
 f64c89c568ac4f9d6654ab922445a184 *R/market_model.R
 7323137c33d6aca44ca349cf9dc28ee9 *R/markets.R
 93cc398f2c4264c2bdbcbfb404bf8de4 *R/model_logger.R
@@ -38,11 +38,11 @@ fff6712ea7c155397f1eee2089082d7c *R/system_directional.R
 8612384f55dd31d64582b4c3b8465452 *R/system_equilibrium.R
 a6a8b41dda06d171953d998f0d2138c6 *R/system_stochastic_adjustment.R
 78457d8f55274d066e1da23b1dfa8756 *README.md
-1961639f6f4f7f9efffa91b624b3d060 *build/partial.rdb
-5dc96270c2b3aeb0135d5ca92437e496 *build/vignette.rds
+0c6ad5b3446721162c89589e8077ab1c *build/partial.rdb
+b4e7efda4e2dacd363a0e5862d055479 *build/vignette.rds
 89c01762d281658957d6df5cc2571bcc *cleanup
-b5690a09db255e2350a068b08190335f *configure
-493f3abb9d569df387ec8dd8f778fd8f *configure.ac
+c64ebb5f3fa1d07f61986a06abbd6188 *configure
+575ffc5ab0bea8dcc966ea8695829808 *configure.ac
 ae3c92e47e6678e896d117b8093dd9ce *data/houses.rda
 6e730674d636a0346bbe8e55a8f8be5e *inst/CITATION
 a04af7c52980a20ec32e8baf60c1278d *inst/WORDLIST
@@ -52,7 +52,7 @@ a7367fa5c9c2e04f44c28ea5caa8f6e3 *inst/doc/basic_usage.html
 fb0fe46c3049ca0b4f026c80dfe4eaa6 *inst/doc/market_clearing_assessment.R
 0632699529f1d9819a0b7962d3272297 *inst/doc/market_clearing_assessment.Rmd
 170391760cffd7c120a2717abe684aae *inst/doc/market_clearing_assessment.html
-1260f166265f2423e45c207059653f03 *inst/doc/markets.pdf
+562c3e94fbbce3be50d2e7a9fccf09f2 *inst/doc/markets.pdf
 d37a5d333fa1a8e9e49e578106ba3934 *inst/doc/model_details.R
 26e4a5d354dc1f8e847d3f231a5f1bd6 *inst/doc/model_details.Rmd
 c5d1e0a5db3d5ca5c6adbfcf69bdf238 *inst/doc/model_details.html
@@ -107,6 +107,6 @@ a2606fffd583ba86cd5d5bda06ccd4d0 *tests/testthat/test-directional.R
 6f20458c6c08731179a65f56d43ff8bb *tests/testthat/test-stochastic_adjustment.R
 80f84007400defd0d3600e33e5ccb1cc *vignettes/basic_usage.Rmd
 0632699529f1d9819a0b7962d3272297 *vignettes/market_clearing_assessment.Rmd
-1260f166265f2423e45c207059653f03 *vignettes/markets.pdf
+562c3e94fbbce3be50d2e7a9fccf09f2 *vignettes/markets.pdf
 26e4a5d354dc1f8e847d3f231a5f1bd6 *vignettes/model_details.Rmd
 2f431c83cb56e211de2d473205cf240f *vignettes/package.Rmd
