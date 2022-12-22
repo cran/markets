@@ -1,3 +1,15 @@
+# markets 1.1.3
+
+* Corrected `houses` dataset documentation. The data range starts in January instead of July 1958.
+
+# markets 1.1.2.9002
+
+* Updated GitHub actions dependencies' versions.
+
+# markets 1.1.2.9001
+
+* Switched from `@describein` to `@rdname` for documenting classes.
+
 # markets 1.1.2
 
 * Corrected bug of ignoring custom title, or axis labels in market fit plots.

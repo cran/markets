@@ -91,21 +91,21 @@ constructed by concatenating the price variable name with \code{DIFF}.
 }
 \section{Functions}{
 \itemize{
-\item \code{prefixed_const_variable}: Constant coefficient variable name.
+\item \code{prefixed_const_variable()}: Constant coefficient variable name.
 
-\item \code{prefixed_independent_variables}: Independent variable names.
+\item \code{prefixed_independent_variables()}: Independent variable names.
 
-\item \code{prefixed_price_variable}: Price coefficient variable name.
+\item \code{prefixed_price_variable()}: Price coefficient variable name.
 
-\item \code{prefixed_control_variables}: Control variable names.
+\item \code{prefixed_control_variables()}: Control variable names.
 
-\item \code{prefixed_variance_variable}: Variance variable name.
+\item \code{prefixed_variance_variable()}: Variance variable name.
 
-\item \code{prefixed_quantity_variable}: Quantity variable name.
+\item \code{prefixed_quantity_variable()}: Quantity variable name.
 
-\item \code{lagged_price_variable}: Lagged price variable name.
+\item \code{lagged_price_variable()}: Lagged price variable name.
 
-\item \code{price_differences_variable}: Price differences variable name.
+\item \code{price_differences_variable()}: Price differences variable name.
+
 }}
-
 \keyword{internal}

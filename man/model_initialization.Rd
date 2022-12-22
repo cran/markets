@@ -157,20 +157,20 @@ differences is created.
 }
 \section{Functions}{
 \itemize{
-\item \code{initialize,diseq_basic-method}: Basic disequilibrium model base
+\item \code{initialize(diseq_basic)}: Basic disequilibrium model base
 constructor
 
-\item \code{initialize,diseq_deterministic_adjustment-method}: Disequilibrium model with deterministic price
+\item \code{initialize(diseq_deterministic_adjustment)}: Disequilibrium model with deterministic price
 adjustment constructor
 
-\item \code{initialize,diseq_directional-method}: Directional disequilibrium model base constructor
+\item \code{initialize(diseq_directional)}: Directional disequilibrium model base constructor
 
-\item \code{initialize,diseq_stochastic_adjustment-method}: Disequilibrium model with stochastic price
+\item \code{initialize(diseq_stochastic_adjustment)}: Disequilibrium model with stochastic price
 adjustment constructor
 
-\item \code{initialize,equilibrium_model-method}: Equilibrium model constructor
+\item \code{initialize(equilibrium_model)}: Equilibrium model constructor
+
 }}
-
 \examples{
 simulated_data <- simulate_data(
   "diseq_basic", 500, 3, # model type, observed entities, observed time points

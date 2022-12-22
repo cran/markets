@@ -21,11 +21,11 @@ Returns the coefficients of the fitted market model.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{market_fit}: Estimated coefficients.
+\item \code{coef(market_fit)}: Estimated coefficients.
 
-\item \code{market_fit}: Estimated coefficients alias.
+\item \code{coefficients(market_fit)}: Estimated coefficients alias.
+
 }}
-
 \examples{
 \donttest{
 # estimate a model using the houses dataset

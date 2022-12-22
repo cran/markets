@@ -47,11 +47,11 @@ is calculated over all time points.
 }
 \section{Functions}{
 \itemize{
-\item \code{aggregate_demand}: Demand aggregation.
+\item \code{aggregate_demand()}: Demand aggregation.
 
-\item \code{aggregate_supply}: Supply aggregation.
+\item \code{aggregate_supply()}: Supply aggregation.
+
 }}
-
 \examples{
 \donttest{
 fit <- diseq_basic(

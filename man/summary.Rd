@@ -52,11 +52,11 @@ For a linear estimation of the equilibrium system, the function prints
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{market_model}: Summarizes the model.
+\item \code{summary(market_model)}: Summarizes the model.
 
-\item \code{market_fit}: Summarizes the model's fit.
+\item \code{summary(market_fit)}: Summarizes the model's fit.
+
 }}
-
 \examples{
 \donttest{
 model <- simulate_model(

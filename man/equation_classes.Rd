@@ -5,32 +5,28 @@
 \docType{class}
 \name{equation_classes}
 \alias{equation_classes}
-\alias{equation_base-class}
 \alias{equation_basic-class}
 \alias{equation_deterministic_adjustment-class}
 \alias{equation_directional-class}
 \alias{equation_stochastic_adjustment-class}
 \title{Equation classes}
 \description{
-Equation classes
-}
-\details{
 Classes with data and functionality describing equations of model systems.
 }
-\section{Functions}{
-\itemize{
-\item \code{equation_base-class}: Equation base class
+\details{
+\subsection{\code{equation_base}}{Equation base class}
 
-\item \code{equation_basic-class}: Basic disequilibrium model equation class
+\subsection{\code{equation_basic}}{Basic disequilibrium model equation class}
 
-\item \code{equation_deterministic_adjustment-class}: Deterministic adjustment disequilibrium model equation
-class
+\subsection{\code{equation_deterministic_adjustment}}{
+Deterministic adjustment disequilibrium model equation class}
 
-\item \code{equation_directional-class}: Directional disequilibrium model equation class
+\subsection{\code{equation_directional}}{
+Directional disequilibrium model equation class}
 
-\item \code{equation_stochastic_adjustment-class}: Stochastic adjustment disequilibrium model equation class
-}}
-
+\subsection{\code{equation_stochastic_adjustment}}{
+Stochastic adjustment disequilibrium model equation class}
+}
 \section{Slots}{
 
 \describe{

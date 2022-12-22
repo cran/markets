@@ -159,11 +159,11 @@ and uses it to initialize a model object. Data are simulated using the
 }
 \section{Functions}{
 \itemize{
-\item \code{simulate_data}: Simulate model data.
+\item \code{simulate_data()}: Simulate model data.
 
-\item \code{simulate_model}: Simulate model.
+\item \code{simulate_model()}: Simulate model.
+
 }}
-
 \examples{
 \donttest{
 model <- simulate_model(

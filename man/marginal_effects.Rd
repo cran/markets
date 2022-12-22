@@ -54,7 +54,7 @@ both sides, the result name is prefixed by \code{"B_"}.
 }
 \section{Functions}{
 \itemize{
-\item \code{shortage_marginal}: Marginal effect on market system
+\item \code{shortage_marginal()}: Marginal effect on market system
 
 Returns the estimated marginal effect of a variable on the market system. For a
 system variable \eqn{x} with demand coefficient \eqn{\beta_{d, x}} and supply
@@ -63,7 +63,7 @@ given by
 \deqn{M_{x} = \frac{\beta_{d, x} - \beta_{s, x}}{\sqrt{\sigma_{d}^{2} +
 \sigma_{s}^{2} - 2 \rho_{ds} \sigma_{d} \sigma_{s}}}.}
 
-\item \code{shortage_probability_marginal}: Marginal effect on shortage probabilities
+\item \code{shortage_probability_marginal()}: Marginal effect on shortage probabilities
 
 Returns the estimated marginal effect of a variable on the probability of
 observing a shortage state. The mean marginal effect (\code{aggregate = "mean"}) on
@@ -74,8 +74,8 @@ and the marginal effect at the mean (\code{aggregate = "at_the_mean"}) by
 where \eqn{M_{x}} is the marginal effect on the system, \eqn{D} is the demanded
 quantity, \eqn{S} the supplied quantity, and \eqn{\phi} is the standard normal
 density.
-}}
 
+}}
 \examples{
 \donttest{
 # estimate a model using the houses dataset

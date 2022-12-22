@@ -97,11 +97,11 @@ are available, the implementation of the optimization is parallelized.
 }
 \section{Functions}{
 \itemize{
-\item \code{estimate,market_model-method}: Full information maximum likelihood estimation.
+\item \code{estimate(market_model)}: Full information maximum likelihood estimation.
 
-\item \code{estimate,equilibrium_model-method}: Equilibrium model estimation.
+\item \code{estimate(equilibrium_model)}: Equilibrium model estimation.
+
 }}
-
 \examples{
 \donttest{
 # initialize the model using the houses dataset

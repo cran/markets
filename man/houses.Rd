@@ -30,8 +30,8 @@ Credit market data for US housing starts
 \subsection{The basic houses dataset (\code{houses})}{
 
 A dataset containing the monthly mortgage rates and other attributes of the US market
-for new, non-farm houses from July 1958 to December 1969. The variables are as
-follows:
+for new, non-farm houses from January 1958 to December 1969 (144 observations).
+The variables are as follows:
 
 \itemize{
   \item \code{DATE} The date of the record.
@@ -82,9 +82,9 @@ Returns A modified version of the \code{houses} dataset.
 }
 \section{Functions}{
 \itemize{
-\item \code{fair_houses}: Generate Fair & Jaffee (1972) dataset
-}}
+\item \code{fair_houses()}: Generate Fair & Jaffee (1972) dataset
 
+}}
 \examples{
 data(houses)
 head(houses)

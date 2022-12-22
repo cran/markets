@@ -5,7 +5,6 @@
 \docType{class}
 \name{system_classes}
 \alias{system_classes}
-\alias{system_base-class}
 \alias{system_basic-class}
 \alias{system_deterministic_adjustment-class}
 \alias{system_directional-class}
@@ -13,26 +12,23 @@
 \alias{system_stochastic_adjustment-class}
 \title{System classes}
 \description{
-System classes
-}
-\details{
 Classes with data and functionality describing systems of models.
 }
-\section{Functions}{
-\itemize{
-\item \code{system_base-class}: System base class
+\details{
+\subsection{\code{system_base}}{System base class}
 
-\item \code{system_basic-class}: Basic model's system class
+\subsection{\code{system_basic}}{Basic model's system class}
 
-\item \code{system_deterministic_adjustment-class}: Deterministic adjustment model's system class
+\subsection{\code{system_deterministic_adjustment}}{
+Deterministic adjustment model's system class}
 
-\item \code{system_directional-class}: Directional system class
+\subsection{\code{system_directional}}{Directional system class}
 
-\item \code{system_equilibrium-class}: Equilibrium model's system class
+\subsection{\code{system_equilibrium}}{Equilibrium model's system class}
 
-\item \code{system_stochastic_adjustment-class}: Stochastic adjustment model's system class
-}}
-
+\subsection{\code{system_stochastic_adjustment}}{
+Stochastic adjustment model's system class}
+}
 \section{Slots}{
 
 \describe{

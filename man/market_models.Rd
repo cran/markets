@@ -5,7 +5,6 @@
 \docType{class}
 \name{market_models}
 \alias{market_models}
-\alias{market_model-class}
 \alias{disequilibrium_model-class}
 \alias{diseq_basic-class}
 \alias{diseq_deterministic_adjustment-class}
@@ -14,7 +13,8 @@
 \alias{equilibrium_model-class}
 \title{Market model classes}
 \description{
-\subsection{\code{diseq_basic}}{
+\subsection{Basic disequilibrium model with unknown sample separation
+(\code{diseq_basic})}{
 The basic disequilibrium model consists of three equations. Two of them
 are the demand and supply equations. In addition, the model replaces the
 market clearing condition with the short side rule. The model is estimated
@@ -25,7 +25,8 @@ using full information maximum likelihood.
 \deqn{Q_{nt} = \min\{D_{nt},S_{nt}\}.}
 }
 
-\subsection{\code{diseq_deterministic_adjustment}}{
+\subsection{Disequilibrium model with deterministic price dynamics
+(\code{diseq_deterministic_adjustment})}{
 The disequilibrium model with deterministic price adjustment consists
 of four equations. The two market equations, the short side rule and price
 evolution equation. The first two equations are stochastic. The price
@@ -39,7 +40,8 @@ The model is estimated using full information maximum likelihood.
 \deqn{\Delta P_{nt} = \frac{1}{\gamma} \left( D_{nt} - S_{nt} \right).}
 }
 
-\subsection{\code{diseq_directional}}{
+\subsection{Directional disequilibrium model with sample separation
+(\code{diseq_directional})}{
 The directional disequilibrium model consists of three equations and a
 separation rule. The market is described by a linear demand, a linear supply
 equation and the short side rule. The separation rule splits the sample
@@ -55,7 +57,8 @@ model is estimated using full information maximum likelihood.
 \deqn{\Delta P_{nt} \ge 0 \Longrightarrow D_{nt} \ge S_{nt}.}
 }
 
-\subsection{\code{diseq_stochastic_adjustment}}{
+\subsection{Disequilibrium model with stochastic price dynamics
+(\code{diseq_stochastic_adjustment})}{
 The disequilibrium model with stochastic price adjustment is described
 by a system of four equations. Three of of them form a stochastic linear system of
 market equations equations coupled with a stochastic price evolution equation. The
@@ -70,7 +73,7 @@ full information maximum likelihood.
     \frac{1}{\gamma} \left( D_{nt} - S_{nt} \right) +  X_{p,nt}'\beta_{p} + u_{p,nt}.}
 }
 
-\subsection{\code{equilibrium_model}}{
+\subsection{Equilibrium model (\code{equilibrium_model})}{
 The equilibrium model consists of thee equations. The demand, the
 supply and the market clearing equations. The model can be estimated using both full
 information maximum likelihood and two-stage least squares.
@@ -87,24 +90,6 @@ demand and supply equations. In the second stage, the demand and supply equation
 estimated using the fitted prices instead of the observed.
 }
 }
-\section{Functions}{
-\itemize{
-\item \code{market_model-class}: Base class for market models
-
-\item \code{disequilibrium_model-class}: Base class for disequilibrium models
-
-\item \code{diseq_basic-class}: Basic disequilibrium model with unknown sample
-separation.
-
-\item \code{diseq_deterministic_adjustment-class}: Disequilibrium model with deterministic price dynamics.
-
-\item \code{diseq_directional-class}: Directional disequilibrium model with sample separation.
-
-\item \code{diseq_stochastic_adjustment-class}: Disequilibrium model with stochastic price dynamics.
-
-\item \code{equilibrium_model-class}: Equilibrium model
-}}
-
 \section{Slots}{
 
 \describe{

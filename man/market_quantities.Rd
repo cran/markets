@@ -41,11 +41,11 @@ each observation at the passed vector of parameters.
 }
 \section{Functions}{
 \itemize{
-\item \code{demanded_quantities}: Estimated demanded quantities.
+\item \code{demanded_quantities()}: Estimated demanded quantities.
 
-\item \code{supplied_quantities}: Estimated supplied quantities.
+\item \code{supplied_quantities()}: Estimated supplied quantities.
+
 }}
-
 \examples{
 \donttest{
 fit <- diseq_basic(

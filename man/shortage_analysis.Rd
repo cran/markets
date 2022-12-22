@@ -111,19 +111,19 @@ Returns the standard deviation of excess demand.
 }
 \section{Functions}{
 \itemize{
-\item \code{shortages}: Shortages.
+\item \code{shortages()}: Shortages.
 
-\item \code{normalized_shortages}: Normalized shortages.
+\item \code{normalized_shortages()}: Normalized shortages.
 
-\item \code{relative_shortages}: Relative shortages.
+\item \code{relative_shortages()}: Relative shortages.
 
-\item \code{shortage_probabilities}: Shortage probabilities.
+\item \code{shortage_probabilities()}: Shortage probabilities.
 
-\item \code{shortage_indicators}: Shortage indicators.
+\item \code{shortage_indicators()}: Shortage indicators.
 
-\item \code{shortage_standard_deviation}: Shortage standard deviation.
+\item \code{shortage_standard_deviation()}: Shortage standard deviation.
+
 }}
-
 \examples{
 \donttest{
 # estimate a model using the houses dataset

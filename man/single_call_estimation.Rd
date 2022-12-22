@@ -138,19 +138,19 @@ the estimation options and returns fitted model.
 }
 \section{Functions}{
 \itemize{
-\item \code{diseq_basic}: Basic disequilibrium model.
+\item \code{diseq_basic()}: Basic disequilibrium model.
 
-\item \code{diseq_deterministic_adjustment}: Disequilibrium model with deterministic
+\item \code{diseq_deterministic_adjustment()}: Disequilibrium model with deterministic
 price adjustments.
 
-\item \code{diseq_directional}: Directional disequilibrium model.
+\item \code{diseq_directional()}: Directional disequilibrium model.
 
-\item \code{diseq_stochastic_adjustment}: Disequilibrium model with stochastic
+\item \code{diseq_stochastic_adjustment()}: Disequilibrium model with stochastic
 price adjustments.
 
-\item \code{equilibrium_model}: Equilibrium model
+\item \code{equilibrium_model()}: Equilibrium model
+
 }}
-
 \examples{
 \donttest{
 # An example of estimating the equilibrium model

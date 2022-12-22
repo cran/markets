@@ -51,13 +51,13 @@ A market type string (equilibrium or disequilibrium) for a given model.}
 }
 \section{Functions}{
 \itemize{
-\item \code{name}: Model name
+\item \code{name()}: Model name
 
-\item \code{describe}: Model description
+\item \code{describe()}: Model description
 
-\item \code{market_type}: Market type
+\item \code{market_type()}: Market type
+
 }}
-
 \examples{
 # initialize the equilibrium using the houses dataset
 model <- new(

@@ -47,11 +47,11 @@ calculates and returns:
 }
 \section{Functions}{
 \itemize{
-\item \code{demand_descriptives}: Demand descriptive statistics.
+\item \code{demand_descriptives()}: Demand descriptive statistics.
 
-\item \code{supply_descriptives}: Supply descriptive statistics.
+\item \code{supply_descriptives()}: Supply descriptive statistics.
+
 }}
-
 \examples{
 # initialize the basic model using the houses dataset
 model <- new(
