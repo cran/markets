@@ -1,53 +1,54 @@
-AC_INIT([markets],[1.1.3])
+AC_INIT([markets],[1.1.4])
 
-# Find the compiler and compiler flags used by R.
 : ${R_HOME=`R RHOME`}
 if test -z "${R_HOME}"; then
   echo "could not determine R_HOME"
   exit 1
 fi
-CXX=`"${R_HOME}/bin/R" CMD config CXX`
-CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXXFLAGS`
-CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
+
+AC_MSG_CHECKING([whether R CXX17 configuration is available])
+AS_IF(
+ ["${R_HOME}/bin/R" CMD config CXX17 | grep ERROR >/dev/null 2>/dev/null],
+ [CXX=`"${R_HOME}/bin/R" CMD config CXX`
+  CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXXFLAGS`
+  AC_MSG_RESULT([no])],
+ [CXX=`"${R_HOME}/bin/R" CMD config CXX17`
+  CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXX17FLAGS`
+  CXX_STD=CXX17
+  AC_MSG_RESULT([yes])])
 AC_LANG(C++)
-AC_PROG_CPP
+AC_PROG_CXX
 
-GSL_LIBS=`gsl-config --libs`
-AS_IF([test "X$GSL_LIBS" != "X"], [
-  CPPFLAGS="$CPPFLAGS `gsl-config --cflags`"
-  LIBS="$LIBS `gsl-config --libs`"
-  AC_MSG_CHECKING([whether libgsl is available])
-  AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([[#include "gsl/gsl_multimin.h"]],
-		     [[gsl_vector v;]])],
-    [AC_MSG_RESULT([yes])
-     PKG_CPPFLAGS="$PKG_CPPFLAGS -D_MARKETS_HAS_GSL_ `gsl-config --cflags`"
-     PKG_LIBS="$PKG_LIBS `gsl-config --libs`"],
-    [AC_MSG_RESULT([no])])
-])
+PKG_CPPFLAGS="${PKG_CPPFLAGS} -D_MARKETS_HAS_GSL_"
+GSL_LIBS=`"${R_HOME}/bin/Rscript" -e "RcppGSL::LdFlags()"`
+PKG_LIBS="${PKG_LIBS} ${GSL_LIBS}"
 
-AC_CHECK_HEADERS(execution)
-AS_IF([test "X$ac_cv_header_execution" = "Xyes"], [
-  AC_MSG_CHECKING([whether the libtbb is available])
-  CPPFLAGS="$CPPFLAGS -std=c++17"
-  AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([[#include<execution>]],
-    [[const auto& ex = std::execution::par_unseq;]])],
-    [AC_MSG_RESULT([yes])
-     PKG_CPPFLAGS="$PKG_CPPFLAGS -D_MARKETS_HAS_EXECUTION_POLICIES_  -std=c++17"
-     PKG_LIBS="$PKG_LIBS `pkg-config tbb --libs`"],
-    [LIBS="$LIBS -ltbb"
-     AC_LINK_IFELSE(
-     [AC_LANG_PROGRAM([[#include<execution>]],
-     [[const auto& ex = std::execution::par_unseq;]])],
-     [AC_MSG_RESULT([yes])
-      PKG_CPPFLAGS="$PKG_CPPFLAGS -D_MARKETS_HAS_EXECUTION_POLICIES_  -std=c++17"
-      PKG_LIBS="$PKG_LIBS -ltbb"],
-     [AC_MSG_RESULT([no])])
-    ])
-])
+if test "${CXX_STD}" = "CXX17"; then
+  AC_CHECK_HEADER([execution], [], [])
 
-# Write the flags into the src/Makevars file.
+  if test "${ac_cv_header_execution}" = "yes"; then
+    AC_CHECK_LIB([tbb], [main], [HAS_TBB=yes], [])
+
+    if test "${ac_cv_lib_tbb_main}" = "yes"; then
+      AC_MSG_CHECKING([whether tbb can be linked against])
+      CXXFLAGS="${CXXFLAGS} -std=c++17"
+      LIBS="${LIBS} -ltbb"
+      AC_LINK_IFELSE(
+         [AC_LANG_PROGRAM([#include <execution>],
+          [std::execution::par_unseq])],
+         [PKG_CXXFLAGS="${PKG_CXXFLAGS} -std=c++17"
+          PKG_CPPFLAGS="${PKG_CPPFLAGS} -D_MARKETS_HAS_EXECUTION_POLICIES_"
+          PKG_LIBS="${PKG_LIBS} -ltbb"
+          AC_MSG_RESULT([yes])],
+         [AC_MSG_RESULT([no])])
+    fi
+  fi
+fi
+
+
+dnl Create the  src/Makevars file.
+AC_SUBST([CXX_STD], ["${CXX_STD}"])
+AC_SUBST([PKG_CXXFLAGS], ["${PKG_CXXFLAGS}"])
 AC_SUBST([PKG_CPPFLAGS], ["${PKG_CPPFLAGS}"])
 AC_SUBST([PKG_LIBS], ["${PKG_LIBS}"])
 AC_CONFIG_FILES([src/Makevars])
@@ -57,6 +58,9 @@ echo "
   --------------------------------------------------
   Configuration for ${PACKAGE_NAME} ${PACKAGE_VERSION}
 
+    cxx: ${CXX}
+    cxx_std: ${CXX_STD}
+    cxxflags: ${PKG_CXXFLAGS}
     cppflags: ${PKG_CPPFLAGS}
     libs:     ${PKG_LIBS}
 

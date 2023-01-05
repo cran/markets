@@ -1,7 +1,7 @@
-381634154edf049580961a3c1ee3e18a *DESCRIPTION
+2d708c8f972d64c03730904babd84713 *DESCRIPTION
 cd492f9b58bc55b27835d17fefe16b9a *LICENSE
 f70124bb9a6cd34a257bbd5933c9105d *NAMESPACE
-0042805291b7d450da1a2aaab9367ba9 *NEWS.md
+7fec389babc0eafb3498b1550c7331ed *NEWS.md
 77519b9af0599f4533b10434b91fef51 *R/data.R
 6ac2d2b1b9969e0458416f6e1fe2c8c6 *R/diseq_basic.R
 47ddb0647832f96a9cd58b04af511254 *R/diseq_deterministic_adjustment.R
@@ -41,8 +41,8 @@ fcf884b8ed947993142ad3af3049a799 *R/system_equilibrium.R
 ea124a494ad7922985532ad3b308e4d5 *build/partial.rdb
 9df762ad5f1400fba11ef79f5fd3570f *build/vignette.rds
 89c01762d281658957d6df5cc2571bcc *cleanup
-3f9a58fdbad8afcdbea06c52c0977912 *configure
-43fc083c69799939b951c724c5d6eaf1 *configure.ac
+a0fd73b7b16dd05f1813bde6af05a769 *configure
+ff16944244c7218248eab0ff3efd1585 *configure.ac
 ae3c92e47e6678e896d117b8093dd9ce *data/houses.rda
 6e730674d636a0346bbe8e55a8f8be5e *inst/CITATION
 a04af7c52980a20ec32e8baf60c1278d *inst/WORDLIST
@@ -52,7 +52,7 @@ a7367fa5c9c2e04f44c28ea5caa8f6e3 *inst/doc/basic_usage.html
 fb0fe46c3049ca0b4f026c80dfe4eaa6 *inst/doc/market_clearing_assessment.R
 0632699529f1d9819a0b7962d3272297 *inst/doc/market_clearing_assessment.Rmd
 170391760cffd7c120a2717abe684aae *inst/doc/market_clearing_assessment.html
-5b8170b4529e08683d5de315ddbc0b37 *inst/doc/markets.pdf
+7175f5464e3ac22abc3a7d5d80edd95b *inst/doc/markets.pdf
 d37a5d333fa1a8e9e49e578106ba3934 *inst/doc/model_details.R
 26e4a5d354dc1f8e847d3f231a5f1bd6 *inst/doc/model_details.Rmd
 c5d1e0a5db3d5ca5c6adbfcf69bdf238 *inst/doc/model_details.html
@@ -94,8 +94,8 @@ bc5b070354770d42d832888142b79522 *man/summary.Rd
 b3bf949e777d72b594badbc39b551ca0 *man/system_classes.Rd
 6a25d4e76bed2a9b96d4f4f625e0ab9b *man/variable_names.Rd
 ed3ae9a8fc8bbd5e26130734d9eebcb2 *man/vcov.Rd
-6af0c521acd2ecd6bf079954d24ae67d *src/Makevars.in
-f3f8054dfdafe54d9e9aac950e810552 *src/Makevars.win
+526fc9611ffdbb110ae3b0038a67ca86 *src/Makevars.in
+54b85555f7da22f36e298afdd9e31259 *src/Makevars.win
 e33dac56b5e82641053372638afff140 *src/RcppExports.cpp
 c622cc91753ca193b2490a3e1e9c8b05 *src/equilibrium.cpp
 98f272adbbd624f5e52cebe6941ed822 *tests/testthat.R
@@ -107,6 +107,6 @@ a2606fffd583ba86cd5d5bda06ccd4d0 *tests/testthat/test-directional.R
 6f20458c6c08731179a65f56d43ff8bb *tests/testthat/test-stochastic_adjustment.R
 80f84007400defd0d3600e33e5ccb1cc *vignettes/basic_usage.Rmd
 0632699529f1d9819a0b7962d3272297 *vignettes/market_clearing_assessment.Rmd
-5b8170b4529e08683d5de315ddbc0b37 *vignettes/markets.pdf
+7175f5464e3ac22abc3a7d5d80edd95b *vignettes/markets.pdf
 26e4a5d354dc1f8e847d3f231a5f1bd6 *vignettes/model_details.Rmd
 2f431c83cb56e211de2d473205cf240f *vignettes/package.Rmd
