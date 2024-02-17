@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 if (requireNamespace("knitr", quietly = TRUE)) {
   knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 }
